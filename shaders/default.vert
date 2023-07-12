@@ -17,7 +17,7 @@ out DATA {
 uniform mat4 model;
 uniform mat4 proj;
 uniform mat4 view;
-uniform mat3 normalMatrix;
+uniform mat3 modelMatrix;
 
 uniform vec3 cameraPosition;
 
@@ -36,10 +36,10 @@ void main() {
         data.texCoord = vec2(data.texCoord.y, data.texCoord.x);
 
     if (inverseNormal == 1)
-        data.normal = vec3(normalMatrix * -normal);
+        data.normal = vec3(modelMatrix * -normal);
 
     else
-        data.normal = vec3(normalMatrix * normal);
+        data.normal = vec3(modelMatrix * normal);
     
     data.cameraPosition = cameraPosition;
     data.proj = proj;

@@ -181,7 +181,7 @@ void main() {
     if (enableIBL == 1) {
         vec3 irradiance = texture(irradianceMap, N).rgb;
         diffuse = irradiance * diffuse;
-        const float MAX_REFLECTION_LOD = 4.0;
+        const float MAX_REFLECTION_LOD = 4.0f;
         vec3 prefilteredColor = textureLod(prefilterMap, R, roughness * MAX_REFLECTION_LOD).rgb;
         vec2 brdf = texture(brdfLUT, vec2(max(dot(N, V), 0.0f), roughness)).rg;
         specular = prefilteredColor * (F * brdf.x + brdf.y);
