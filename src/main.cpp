@@ -33,7 +33,7 @@ int main() {
         }
 
         shader.use();
-        shader.setUniform1i("enableIBL", 1);
+        shader.setUniform1i("enableIBL", 0);
         shader.setUniform1i("enableShadows", 0);
         shader.setUniform1i("useAlbedoMap", 1);
         shader.setUniform1i("useMetallicMap", 0);
