@@ -13,7 +13,7 @@ int main() {
     );
 
     nickel2::FPSCamera camera(&window, glm::vec3(0.0f, 0.0f, 0.0f), 90.0f, 100.0f, 0.1f, 100.0f);
-    nickel2::Model model("res/deagle.obj");
+    nickel2::Model model("res/f-15/f-15.fbx");
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 

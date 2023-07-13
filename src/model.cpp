@@ -10,7 +10,7 @@ namespace nickel2 {
             return;
         }
 
-        directory = path.substr(0, path.find_last_of("/"));
+        directory = path.substr(0, path.find_last_of("/\\"));
         processNode(scene->mRootNode, scene);
     }
 
@@ -62,7 +62,9 @@ namespace nickel2 {
             aiString str;
             mat->GetTexture(type, i, &str);
             std::string filePath = directory + "/";
-            filePath += str.C_Str();
+            std::string filePathRaw = str.C_Str();
+            filePath += filePathRaw.substr(filePathRaw.find_last_of("/\\") + 1);
+            std::cout << filePath << std::endl;
             Texture texture(filePath.c_str(), 0);
             textures.push_back(texture);
         }
