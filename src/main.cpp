@@ -60,6 +60,10 @@ int main() {
         window.swapBuffers();
     }
 
+    shader.destroy();
+    model.destroy();
+    camera.destroy();
+    window.destroy();
     glfwTerminate();
     return 0;
 }

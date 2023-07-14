@@ -6,6 +6,7 @@
 #include "vertex.hpp"
 #include "shader.hpp"
 #include "texture.hpp"
+#include "material.hpp"
 #include "vertexArray.hpp"
 #include "buffer.hpp"
 
@@ -14,7 +15,7 @@ namespace nickel2 {
         private:
             std::vector <Vertex> vertices;
             std::vector <uint32_t> indices;
-            std::vector <Texture> textures;
+            Material material;
             Buffer* vertexBuffer;
             Buffer* indexBuffer;
             VertexArray* vertexArray;
@@ -22,7 +23,7 @@ namespace nickel2 {
             void setupMesh();
 
         public:
-            Mesh(std::vector <Vertex> vertices, std::vector <uint32_t> indices, std::vector <Texture> textures);
+            Mesh(std::vector <Vertex> vertices, std::vector <uint32_t> indices, Material& material);
             ~Mesh();
 
             void render(Shader* shader);

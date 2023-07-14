@@ -1,10 +1,6 @@
 #include "mesh.hpp"
 
 namespace nickel2 {
-    const char* textureTypes[] = {
-        "albedoMap", "roughnessMap", "metallicMap", "normalMap", "specularMap", "ambientMap"
-    };
-
     void Mesh::setupMesh() {
         vertexArray = new VertexArray();
         vertexBuffer = new Buffer(GL_ARRAY_BUFFER);
@@ -23,8 +19,8 @@ namespace nickel2 {
         vertexArray->unbind();
     }
 
-    Mesh::Mesh(std::vector <Vertex> vertices, std::vector <uint32_t> indices, std::vector <Texture> textures)
-        : vertices(vertices), indices(indices), textures(textures) {
+    Mesh::Mesh(std::vector <Vertex> vertices, std::vector <uint32_t> indices, Material& material)
+        : vertices(vertices), indices(indices), material(material) {
         setupMesh();
     }
 
@@ -36,9 +32,9 @@ namespace nickel2 {
         glEnable(GL_DEPTH_TEST);
         shader->use();
 
-        for (uint32_t i = 0; i < textures.size(); i++) {
-            textures[i].bind();
-            textures[i].texUnit(shader, textureTypes[i]);
+        if (material.albedoMap != nullptr) {
+            material.albedoMap->bind();
+            material.albedoMap->texUnit(shader, textureTypes[0]);
         }
 
         vertexArray->bind();
@@ -47,8 +43,8 @@ namespace nickel2 {
         indexBuffer->unbind();
         vertexArray->unbind();
 
-        for (uint32_t i = 0; i < textures.size(); i++) {
-            textures[i].unbind();
+        if (material.albedoMap != nullptr) {
+            material.albedoMap->unbind();
         }
 
         shader->unuse();
@@ -56,6 +52,7 @@ namespace nickel2 {
     }
 
     void Mesh::destroy() {
+        material.destroy();
         vertexBuffer->destroy();
         indexBuffer->destroy();
         vertexArray->destroy();

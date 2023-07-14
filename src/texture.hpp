@@ -8,6 +8,8 @@
 #include "shader.hpp"
 
 namespace nickel2 {
+    extern const char* textureTypes[6];
+    
     struct TextureConfig {
         int32_t minFilter, magFilter;
         int32_t wrapS, wrapT;

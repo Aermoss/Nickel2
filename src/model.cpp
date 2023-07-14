@@ -49,27 +49,29 @@ namespace nickel2 {
                 indices.push_back(face.mIndices[j]);
         }
 
-        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-        std::vector <Texture> albedoMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE);
-        textures.insert(textures.end(), albedoMaps.begin(), albedoMaps.end());
-        return Mesh(vertices, indices, textures);
+        Material material;
+        material.albedoMap = getMaterialTexture(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_DIFFUSE);
+        material.roughnessMap = nullptr; // getMaterialTexture(scene->mMaterials[mesh->mMaterialIndex], 0);
+        material.metallicMap = nullptr; // getMaterialTexture(scene->mMaterials[mesh->mMaterialIndex], 0);
+        material.normalMap = getMaterialTexture(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_NORMALS);
+        material.specularMap = getMaterialTexture(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_SPECULAR);
+        material.ambientMap = getMaterialTexture(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_AMBIENT);
+        return Mesh(vertices, indices, material);
     }
 
-    std::vector <Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type) {
-        std::vector <Texture> textures;
+    Texture* Model::getMaterialTexture(aiMaterial* mat, aiTextureType type) {
+        Texture* texture = nullptr;
 
-        for (uint32_t i = 0; i < mat->GetTextureCount(type); i++) {
+        if (mat->GetTextureCount(type) != 0) {
             aiString str;
-            mat->GetTexture(type, i, &str);
+            mat->GetTexture(type, 0, &str);
             std::string filePath = directory + "/";
             std::string filePathRaw = str.C_Str();
             filePath += filePathRaw.substr(filePathRaw.find_last_of("/\\") + 1);
+            filePath = filePath.substr(0, filePath.find_last_of('.')) + ".png"; // TODO: fix file not found error
             std::cout << filePath << std::endl;
-            Texture texture(filePath.c_str(), 0);
-            textures.push_back(texture);
-        }
-
-        return textures;
+            texture = new Texture(filePath.c_str(), 0);
+        } return texture;
     }
 
     Model::Model(std::string const& path) {

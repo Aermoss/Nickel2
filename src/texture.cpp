@@ -1,6 +1,10 @@
 #include "texture.hpp"
 
 namespace nickel2 {
+    const char* textureTypes[] = {
+        "albedoMap", "roughnessMap", "metallicMap", "normalMap", "specularMap", "ambientMap"
+    };
+    
     Texture::Texture(const char* filePath, uint32_t slot, TextureConfig config) : filePath(filePath), slot(slot) {
         glGenTextures(1, &id);
         glActiveTexture(GL_TEXTURE0 + slot);

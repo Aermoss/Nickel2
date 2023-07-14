@@ -14,6 +14,7 @@
 #include "texture.hpp"
 #include "shader.hpp"
 #include "vertex.hpp"
+#include "material.hpp"
 #include "mesh.hpp"
 
 namespace nickel2 {
@@ -25,7 +26,7 @@ namespace nickel2 {
             void loadModel(std::string const& path);
             void processNode(aiNode* node, const aiScene* scene);
             Mesh processMesh(aiMesh* mesh, const aiScene* scene);
-            std::vector <Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type);
+            Texture* getMaterialTexture(aiMaterial* mat, aiTextureType type);
 
         public:
             Model(std::string const& path);
