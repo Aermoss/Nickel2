@@ -21,14 +21,17 @@ namespace nickel2 {
     class Model {
         private:
             std::vector <Mesh> meshes;
+            std::vector <Texture*> loadedTextures;
             std::string directory;
 
             void loadModel(std::string const& path);
             void processNode(aiNode* node, const aiScene* scene);
             Mesh processMesh(aiMesh* mesh, const aiScene* scene);
-            Texture* getMaterialTexture(aiMaterial* mat, aiTextureType type);
+            Texture* getMaterialTexture(aiMaterial* mat, aiTextureType type, uint32_t slot);
 
         public:
+            Transform* transform;
+            
             Model(std::string const& path);
             ~Model();
 

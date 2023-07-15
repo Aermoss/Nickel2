@@ -24,4 +24,7 @@
 #include "texture.hpp"
 #include "model.hpp"
 #include "mesh.hpp"
+#include "transform.hpp"
+#include "material.hpp"
+#include "color.hpp"
 #include "utils.hpp"

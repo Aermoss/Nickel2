@@ -9,6 +9,7 @@
 
 namespace nickel2 {
     extern const char* textureTypes[6];
+    extern const char* textureTypesUniformNames[6];
     
     struct TextureConfig {
         int32_t minFilter, magFilter;
@@ -20,13 +21,14 @@ namespace nickel2 {
     class Texture {
         private:
             uint32_t id, slot;
-            const char* filePath;
+            std::string filePath;
 
         public:
-            Texture(const char* filePath, uint32_t slot, TextureConfig config = \
+            Texture(std::string& filePath, uint32_t slot, TextureConfig config = \
                          {GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_REPEAT, GL_REPEAT, GL_RGBA, 0, GL_UNSIGNED_BYTE, GL_TRUE});
             ~Texture();
             
+            std::string& getFilePath();
             void texUnit(Shader* shader, const char* name);
             void bind();
             void unbind();

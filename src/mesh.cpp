@@ -19,8 +19,17 @@ namespace nickel2 {
         vertexArray->unbind();
     }
 
-    Mesh::Mesh(std::vector <Vertex> vertices, std::vector <uint32_t> indices, Material& material)
+    Mesh::Mesh(std::vector <Vertex> vertices, std::vector <uint32_t> indices, Material& material, Transform* transform)
         : vertices(vertices), indices(indices), material(material) {
+
+        if (transform == nullptr) {
+            this->transform = new Transform();
+            destroyTransform = true;
+        } else {
+            this->transform = transform;
+            destroyTransform = false;
+        }
+
         setupMesh();
     }
 
@@ -31,10 +40,24 @@ namespace nickel2 {
     void Mesh::render(Shader* shader) {
         glEnable(GL_DEPTH_TEST);
         shader->use();
+        shader->setUniform3fv("albedoDefault", (float*) glm::value_ptr(material.albedo));
+        shader->setUniform1f("roughnessDefault", material.roughness);
+        shader->setUniform1f("metallicDefault", material.metallic);
+        shader->setUniform1f("ambientDefault", 0.5f);
+        glm::mat4 matrix = transform->get();
+        shader->setUniformMatrix3fv("modelMatrix", (float*) glm::value_ptr(glm::transpose(glm::inverse(glm::mat3(matrix)))));
+        shader->setUniformMatrix4fv("model", glm::value_ptr(matrix));
 
-        if (material.albedoMap != nullptr) {
-            material.albedoMap->bind();
-            material.albedoMap->texUnit(shader, textureTypes[0]);
+        std::vector <Texture*> textures = material.getTextures();
+
+        for (uint32_t i = 0; i < textures.size(); i++) {
+            if (textures[i] == nullptr) {
+                shader->setUniform1i(textureTypesUniformNames[i], 0);
+            } else {
+                shader->setUniform1i(textureTypesUniformNames[i], 1);
+                textures[i]->texUnit(shader, textureTypes[i]);
+                textures[i]->bind();
+            }
         }
 
         vertexArray->bind();
@@ -43,8 +66,10 @@ namespace nickel2 {
         indexBuffer->unbind();
         vertexArray->unbind();
 
-        if (material.albedoMap != nullptr) {
-            material.albedoMap->unbind();
+        for (uint32_t i = 0; i < textures.size(); i++) {
+            shader->setUniform1i(textureTypesUniformNames[i], 0);
+            if (textures[i] == nullptr) continue;
+            textures[i]->unbind();
         }
 
         shader->unuse();
@@ -52,7 +77,11 @@ namespace nickel2 {
     }
 
     void Mesh::destroy() {
-        material.destroy();
+        if (destroyTransform) {
+            transform->destroy();
+            delete transform;
+        }
+            
         vertexBuffer->destroy();
         indexBuffer->destroy();
         vertexArray->destroy();

@@ -4,8 +4,12 @@ namespace nickel2 {
     const char* textureTypes[] = {
         "albedoMap", "roughnessMap", "metallicMap", "normalMap", "specularMap", "ambientMap"
     };
+
+    const char* textureTypesUniformNames[] = {
+        "useAlbedoMap", "useRoughnessMap", "useMetallicMap", "useNormalMap", "useSpecularMap", "useAmbientMap"
+    };
     
-    Texture::Texture(const char* filePath, uint32_t slot, TextureConfig config) : filePath(filePath), slot(slot) {
+    Texture::Texture(std::string& filePath, uint32_t slot, TextureConfig config) : filePath(filePath), slot(slot) {
         glGenTextures(1, &id);
         glActiveTexture(GL_TEXTURE0 + slot);
         glBindTexture(GL_TEXTURE_2D, id);
@@ -18,26 +22,26 @@ namespace nickel2 {
         stbi_set_flip_vertically_on_load(true);
 
         if (config.pixelType == GL_UNSIGNED_BYTE) {
-            unsigned char* data = stbi_load(filePath, &width, &height, &channels, 0);
+            unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &channels, 0);
 
             if (format == 0)
                 format = channels == 4 ? GL_RGBA : (channels == 3 ? GL_RGB : (channels == 2 ? GL_RG : (channels == 1 ? GL_RED : 0)));
 
             if (format == 0)
-                std::cout << "failed to load image" << std::endl;
+                std::cout << "failed to load image: " << filePath << std::endl;
 
             glTexImage2D(GL_TEXTURE_2D, 0, config.internalFormat, width, height, 0, format, config.pixelType, data);
             if (config.mipmap) glGenerateMipmap(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D, 0);
             stbi_image_free(data);
         } else if (config.pixelType == GL_FLOAT) {
-            float* data = stbi_loadf(filePath, &width, &height, &channels, 0);
+            float* data = stbi_loadf(filePath.c_str(), &width, &height, &channels, 0);
 
             if (format == 0)
                 format = channels == 4 ? GL_RGBA : (channels == 3 ? GL_RGB : (channels == 2 ? GL_RG : (channels == 1 ? GL_RED : 0)));
 
             if (format == 0)
-                std::cout << "failed to load image" << std::endl;
+                std::cout << "failed to load image: " << filePath << std::endl;
 
             glTexImage2D(GL_TEXTURE_2D, 0, config.internalFormat, width, height, 0, format, config.pixelType, data);
             if (config.mipmap) glGenerateMipmap(GL_TEXTURE_2D);
@@ -50,6 +54,10 @@ namespace nickel2 {
 
     Texture::~Texture() {
 
+    }
+
+    std::string& Texture::getFilePath() {
+        return filePath;
     }
 
     void Texture::texUnit(Shader* shader, const char* name) {
