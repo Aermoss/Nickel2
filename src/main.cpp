@@ -35,7 +35,6 @@ int main() {
 
         shader.use();
         shader.setUniform1i("lightCount", 1);
-        shader.setUniform1f("lightBrightnesses[0]", 1.0f);
         shader.setUniform3fv("lightPositions[0]", (float*) glm::value_ptr(glm::vec3(3.0f, 3.0f, 3.0f)));
         shader.setUniform3fv("lightColors[0]", (float*) glm::value_ptr(glm::vec3(1.0f, 1.0f, 1.0f)));
         shader.unuse();
