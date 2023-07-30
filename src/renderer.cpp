@@ -590,7 +590,7 @@ namespace nickel2 {
                 basicShader->unuse();
 
                 if (backgroundTransparency > 0.0f)
-                    backgroundTransparency -= 0.003f;
+                    backgroundTransparency -= 0.6f * window->deltaTime;
                 
                 if (backgroundTransparency < 0.0f)
                     backgroundTransparency = 0.0f;
@@ -613,7 +613,7 @@ namespace nickel2 {
                 basicShader->unuse();
 
                 if (logoTransparency > 0.0f)
-                    logoTransparency -= 0.002f;
+                    logoTransparency -= 0.5f * window->deltaTime;
                 
                 if (logoTransparency < 0.0f)
                     logoTransparency = 0.0f;

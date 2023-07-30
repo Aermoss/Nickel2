@@ -4,13 +4,13 @@
 #include "nickel2.hpp"
 
 int main() {
-    glfwInit();
+    nickel2::Context context;
     nickel2::Window window(1200, 600, "Nickel2", true);
 
     nickel2::Renderer renderer(&window, "res/hdr_textures/train_station.hdr");
 
     renderer.lights = {
-        nickel2::Light(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), 3.0f)
+        nickel2::Light(glm::vec3(3.0f, 3.0f, 3.0f), glm::vec3(1.0f, 1.0f, 1.0f), 3.0f)
     };
 
     nickel2::FPSCamera camera(&window, glm::vec3(0.0f, 0.0f, 0.0f), 90.0f, 100.0f, 0.01f, 100.0f);
@@ -54,6 +54,6 @@ int main() {
     camera.destroy();
     renderer.destroy();
     window.destroy();
-    glfwTerminate();
+    context.destroy();
     return 0;
 }

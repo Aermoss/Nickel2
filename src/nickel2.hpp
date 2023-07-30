@@ -29,3 +29,4 @@
 #include "renderer.hpp"
 #include "utils.hpp"
 #include "color.hpp"
+#include "context.hpp"
