@@ -33,7 +33,7 @@ namespace nickel2 {
             Mesh(std::vector <Vertex> vertices, std::vector <uint32_t> indices, Material& material, Transform* transform = nullptr);
             ~Mesh();
 
-            void render(Shader* shader);
+            void render(Shader* shader, bool useTexture = true);
             void destroy();
     };
 }

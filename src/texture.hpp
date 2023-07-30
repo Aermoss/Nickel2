@@ -24,7 +24,7 @@ namespace nickel2 {
             std::string filePath;
 
         public:
-            Texture(std::string& filePath, uint32_t slot, TextureConfig config = \
+            Texture(std::string filePath, uint32_t slot, TextureConfig config = \
                          {GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_REPEAT, GL_REPEAT, GL_RGBA, 0, GL_UNSIGNED_BYTE, GL_TRUE});
             ~Texture();
             
