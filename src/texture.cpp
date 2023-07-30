@@ -9,7 +9,7 @@ namespace nickel2 {
         "useAlbedoMap", "useRoughnessMap", "useMetallicMap", "useNormalMap", "useSpecularMap", "useAmbientMap"
     };
     
-    Texture::Texture(std::string& filePath, uint32_t slot, TextureConfig config) : filePath(filePath), slot(slot) {
+    Texture::Texture(std::string filePath, uint32_t slot, TextureConfig config) : filePath(filePath), slot(slot) {
         glGenTextures(1, &id);
         glActiveTexture(GL_TEXTURE0 + slot);
         glBindTexture(GL_TEXTURE_2D, id);
@@ -28,7 +28,7 @@ namespace nickel2 {
                 format = channels == 4 ? GL_RGBA : (channels == 3 ? GL_RGB : (channels == 2 ? GL_RG : (channels == 1 ? GL_RED : 0)));
 
             if (format == 0)
-                std::cout << "failed to load image: " << filePath << std::endl;
+                std::cout << "failed to load image: " << filePath.c_str() << std::endl;
 
             glTexImage2D(GL_TEXTURE_2D, 0, config.internalFormat, width, height, 0, format, config.pixelType, data);
             if (config.mipmap) glGenerateMipmap(GL_TEXTURE_2D);
@@ -41,7 +41,7 @@ namespace nickel2 {
                 format = channels == 4 ? GL_RGBA : (channels == 3 ? GL_RGB : (channels == 2 ? GL_RG : (channels == 1 ? GL_RED : 0)));
 
             if (format == 0)
-                std::cout << "failed to load image: " << filePath << std::endl;
+                std::cout << "failed to load image: " << filePath.c_str() << std::endl;
 
             glTexImage2D(GL_TEXTURE_2D, 0, config.internalFormat, width, height, 0, format, config.pixelType, data);
             if (config.mipmap) glGenerateMipmap(GL_TEXTURE_2D);

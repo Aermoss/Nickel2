@@ -100,7 +100,7 @@ namespace nickel2 {
                     break;
                 }
             } if (!found) {
-                texture = new Texture(filePath, slot);
+                texture = new Texture(filePath.c_str(), slot);
                 loadedTextures.push_back(texture);
             }
         } return texture;
@@ -115,9 +115,9 @@ namespace nickel2 {
 
     }
 
-    void Model::render(Shader* shader) {
+    void Model::render(Shader* shader, bool useTexture) {
         for (uint32_t i = 0; i < meshes.size(); i++) {
-            meshes[i].render(shader);
+            meshes[i].render(shader, useTexture);
         }
     }
 

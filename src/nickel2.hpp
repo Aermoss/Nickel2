@@ -26,5 +26,6 @@
 #include "mesh.hpp"
 #include "transform.hpp"
 #include "material.hpp"
-#include "color.hpp"
+#include "renderer.hpp"
 #include "utils.hpp"
+#include "color.hpp"

@@ -37,7 +37,7 @@ namespace nickel2 {
 
     }
 
-    void Mesh::render(Shader* shader) {
+    void Mesh::render(Shader* shader, bool useTexture) {
         glEnable(GL_DEPTH_TEST);
         shader->use();
         shader->setUniform3fv("albedoDefault", (float*) glm::value_ptr(material.albedo));
@@ -50,7 +50,7 @@ namespace nickel2 {
 
         std::vector <Texture*> textures = material.getTextures();
 
-        for (uint32_t i = 0; i < textures.size(); i++) {
+        for (uint32_t i = 0; i < (useTexture ? textures.size() : 0); i++) {
             if (textures[i] == nullptr) {
                 shader->setUniform1i(textureTypesUniformNames[i], 0);
             } else {
@@ -66,7 +66,7 @@ namespace nickel2 {
         indexBuffer->unbind();
         vertexArray->unbind();
 
-        for (uint32_t i = 0; i < textures.size(); i++) {
+        for (uint32_t i = 0; i < (useTexture ? textures.size() : 0); i++) {
             shader->setUniform1i(textureTypesUniformNames[i], 0);
             if (textures[i] == nullptr) continue;
             textures[i]->unbind();

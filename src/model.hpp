@@ -35,7 +35,7 @@ namespace nickel2 {
             Model(std::string const& path);
             ~Model();
 
-            void render(Shader* shader);
+            void render(Shader* shader, bool useTexture = true);
             void destroy();
     };
 }
