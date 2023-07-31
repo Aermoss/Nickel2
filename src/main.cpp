@@ -13,7 +13,7 @@ int main() {
         nickel2::Light(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(1.0f, 1.0f, 1.0f), 3.0f)
     };
 
-    nickel2::FPSCamera camera(&window, glm::vec3(0.0f, 0.0f, 0.0f), 90.0f, 100.0f, 0.01f, 100.0f);
+    nickel2::FPSCamera camera(&window, glm::vec3(0.0f, 0.0f, 0.0f), 90.0f, 100.0f, 0.01f, 1000.0f);
     nickel2::Model model("res/deagle.obj");
     model.transform->rotate(glm::vec3(-15.0f, 45.0f, 45.0f));
     nickel2::Model ground("res/cube.obj");

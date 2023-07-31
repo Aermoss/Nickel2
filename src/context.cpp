@@ -9,9 +9,10 @@ namespace nickel2 {
         } return context;
     }
 
-    Context::Context() {
+    Context::Context(uint32_t logLevel) {
         running = false;
         logger = new Logger();
+        logger->setLevel(logLevel);
 
         if (context == nullptr) {
             context = this;

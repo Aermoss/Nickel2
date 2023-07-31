@@ -26,7 +26,7 @@ namespace nickel2 {
             glm::ivec2 displaySize;
             Logger* logger;
 
-            Context();
+            Context(uint32_t logLevel = NICKEL2_INFO);
             ~Context();
 
             uint32_t getUniqueWindowID();
