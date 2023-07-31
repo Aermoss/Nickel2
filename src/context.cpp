@@ -11,14 +11,29 @@ namespace nickel2 {
 
     Context::Context() {
         running = false;
+        logger = new Logger();
 
         if (context == nullptr) {
             context = this;
+            context->logger->log(NICKEL2_INFO, "context created successuflly.");
         } else {
-            std::cout << "error: more than one context" << std::endl;
+            context->logger->log(NICKEL2_ERROR, "failed to create context (there is already an existing context).");
         }
 
-        glfwInit();
+        if (!glfwInit()) {
+            context->logger->log(NICKEL2_FATAL_ERROR, "failed to initialize glfw.");
+        }
+
+        GLFWmonitor* display = glfwGetPrimaryMonitor();
+        const GLFWvidmode* videoMode = glfwGetVideoMode(display);
+        displaySize = glm::ivec2(videoMode->width, videoMode->height);
+        displayRefreshRate = videoMode->refreshRate;
+
+        context->logger->log(NICKEL2_INFO, (
+            std::string("found display device:\n") + \
+            "            > size: " + std::to_string(displaySize.x) + " x " + std::to_string(displaySize.y) + "\n" + \
+            "            > refresh rate: " + std::to_string(displayRefreshRate)).c_str()
+        );
     }
 
     Context::~Context() {
@@ -34,19 +49,25 @@ namespace nickel2 {
     uint32_t Context::registerWindow(Window* window) {
         uint32_t id = getUniqueWindowID();
         windows[id] = window;
+        // a window named "Moss Editor" has been registered with id 1.
+        logger->log(NICKEL2_INFO, ("window named \"" + windows[id]->getTitle() + "\" was registered with id: " + std::to_string(id) + ".").c_str());
         return id;
     }
 
     void Context::removeWindow(uint32_t id) {
+        logger->log(NICKEL2_INFO, ("window named \"" + windows[id]->getTitle() + "\" was closed successfully, id: " + std::to_string(id) + ".").c_str());
         windows.erase(id);
     }
 
     void Context::destroy() {
         if (windows.size() != 0) {
-            std::cout << "warning: active windows" << std::endl;
+            logger->log(NICKEL2_WARNING, "there are still active windows.");
         }
 
         context = nullptr;
+        logger->destroy();
+        delete logger;
+        logger->log(NICKEL2_INFO, "context successfully terminated.");
         glfwTerminate();
     }
 }

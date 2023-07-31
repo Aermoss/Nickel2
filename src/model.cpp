@@ -6,8 +6,10 @@ namespace nickel2 {
         const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
 
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-            std::cout << "Assimp Error" << std::endl;
+            context->logger->log(NICKEL2_ERROR, ("failed to model: \"" + path + "\".").c_str());
             return;
+        } else {
+            context->logger->log(NICKEL2_INFO, ("model successfully loaded: \"" + path + "\".").c_str());
         }
 
         directory = path.substr(0, path.find_last_of("/\\"));

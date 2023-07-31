@@ -2,6 +2,7 @@
 
 namespace nickel2 {
     uint32_t Shader::compileShader(uint32_t type, const char* source) {
+        Context* context = getContext();
         uint32_t shader = glCreateShader(type);
         glShaderSource(shader, 1, &source, nullptr);
         glCompileShader(shader);
@@ -9,20 +10,26 @@ namespace nickel2 {
         int32_t status;
         glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
+        std::string name;
+        if (type == GL_VERTEX_SHADER) name = "vertex";
+        if (type == GL_FRAGMENT_SHADER) name = "fragment";
+        if (type == GL_GEOMETRY_SHADER) name = "geometry";
+
         if (!status) {
             int32_t length;
             glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
             char* buffer = (char*) malloc(length * sizeof(char));
             glGetShaderInfoLog(shader, length, nullptr, buffer);
-            std::cout << buffer << std::endl;
+            context->logger->log(NICKEL2_ERROR, (name + " shader compilation failed: " + std::string(buffer) + ".").c_str());
             free((void*) buffer);
             return 0;
-        }
-
-        return shader;
+        } else {
+            context->logger->log(NICKEL2_INFO, (name + " shader compiled successfully, id: " + std::to_string(shader) + ".").c_str());
+        } return shader;
     }
 
     uint32_t Shader::createProgram(std::string vertexSource, std::string fragmentSource, std::string geometrySource) {
+        Context* context = getContext();
         uint32_t vertexShader = compileShader(GL_VERTEX_SHADER, vertexSource.c_str());
         uint32_t fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentSource.c_str());
         uint32_t geometryShader = 0;
@@ -56,9 +63,11 @@ namespace nickel2 {
             glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
             char* buffer = (char*) malloc(length * sizeof(char));
             glGetProgramInfoLog(program, length, nullptr, buffer);
-            std::cout << buffer << std::endl;
+            context->logger->log(NICKEL2_ERROR, ("shader program linkage failed: " + std::string(buffer) + ".").c_str());
             free((void*) buffer);
             return 0;
+        } else {
+            context->logger->log(NICKEL2_INFO, ("shader program linked successfully, id: " + std::to_string(program) + ".").c_str());
         } return program;
     }
 

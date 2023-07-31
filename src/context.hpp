@@ -2,9 +2,15 @@
 
 #include <stdint.h>
 #include <iostream>
+#include <string>
 #include <map>
 
+#include <glm/glm.hpp>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+#include "window.hpp"
+#include "logger.hpp"
 
 namespace nickel2 {
     class Window;
@@ -15,6 +21,11 @@ namespace nickel2 {
             bool running;
 
         public:
+            std::string vendorName, rendererName, glVersion, glslVersion, glExtensions;
+            uint32_t displayRefreshRate;
+            glm::ivec2 displaySize;
+            Logger* logger;
+
             Context();
             ~Context();
 

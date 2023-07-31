@@ -27,8 +27,12 @@ namespace nickel2 {
             if (format == 0)
                 format = channels == 4 ? GL_RGBA : (channels == 3 ? GL_RGB : (channels == 2 ? GL_RG : (channels == 1 ? GL_RED : 0)));
 
-            if (format == 0)
-                std::cout << "failed to load image: " << filePath.c_str() << std::endl;
+            if (format == 0 || data == nullptr) {
+                context->logger->log(NICKEL2_ERROR, ("failed to load image: \"" + filePath + "\".").c_str());
+                return;
+            } else {
+                context->logger->log(NICKEL2_INFO, ("image successfully loaded: \"" + filePath + "\".").c_str());
+            }
 
             glTexImage2D(GL_TEXTURE_2D, 0, config.internalFormat, width, height, 0, format, config.pixelType, data);
             if (config.mipmap) glGenerateMipmap(GL_TEXTURE_2D);
@@ -40,15 +44,19 @@ namespace nickel2 {
             if (format == 0)
                 format = channels == 4 ? GL_RGBA : (channels == 3 ? GL_RGB : (channels == 2 ? GL_RG : (channels == 1 ? GL_RED : 0)));
 
-            if (format == 0)
-                std::cout << "failed to load image: " << filePath.c_str() << std::endl;
+            if (format == 0 || data == nullptr) {
+                context->logger->log(NICKEL2_ERROR, ("failed to load image: \"" + filePath + "\".").c_str());
+                return;
+            } else {
+                context->logger->log(NICKEL2_INFO, ("image successfully loaded: \"" + filePath + "\".").c_str());
+            }
 
             glTexImage2D(GL_TEXTURE_2D, 0, config.internalFormat, width, height, 0, format, config.pixelType, data);
             if (config.mipmap) glGenerateMipmap(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D, 0);
             stbi_image_free(data);
         } else {
-            std::cout << "failed to load image: unknown pixel type" << std::endl;
+            context->logger->log(NICKEL2_ERROR, ("failed to load image, unknown pixel type: \"" + filePath + "\"").c_str());
         }
     }
 

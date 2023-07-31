@@ -17,6 +17,7 @@ namespace nickel2 {
         private:
             GLFWwindow* window;
             std::map <std::string, windowEvent_t> events;
+            std::string title;
             uint32_t id;
 
         public:
@@ -30,6 +31,8 @@ namespace nickel2 {
             void clear();
             void setEvent(std::string name, windowEvent_t func);
             void getSize(int32_t* width, int32_t* height);
+            void setTitle(const char* title);
+            std::string getTitle();
             bool shouldClose();
             void swapBuffers();
             void destroy();

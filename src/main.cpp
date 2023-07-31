@@ -10,7 +10,7 @@ int main() {
     nickel2::Renderer renderer(&window, "res/hdr_textures/train_station.hdr");
 
     renderer.lights = {
-        nickel2::Light(glm::vec3(3.0f, 3.0f, 3.0f), glm::vec3(1.0f, 1.0f, 1.0f), 3.0f)
+        nickel2::Light(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(1.0f, 1.0f, 1.0f), 3.0f)
     };
 
     nickel2::FPSCamera camera(&window, glm::vec3(0.0f, 0.0f, 0.0f), 90.0f, 100.0f, 0.01f, 100.0f);

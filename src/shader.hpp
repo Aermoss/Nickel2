@@ -6,6 +6,9 @@
 
 #include <glad/glad.h>
 
+#include "context.hpp"
+#include "logger.hpp"
+
 namespace nickel2 {
     class Shader {
         private:
