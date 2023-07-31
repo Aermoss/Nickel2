@@ -6,6 +6,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <stb/stb_image.h>
 
 #include "context.hpp"
 #include "input.hpp"
@@ -24,7 +25,7 @@ namespace nickel2 {
             InputHandler* input;
             float deltaTime, currentTime, lastTime;
             
-            Window(uint32_t width, uint32_t height, const char* title, bool vsync = false);
+            Window(uint32_t width, uint32_t height, const char* title, bool vsync = false, bool fullscreen = false, bool icon = true);
             ~Window();
 
             void update();
