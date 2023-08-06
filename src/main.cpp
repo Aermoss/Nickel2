@@ -70,8 +70,6 @@ int main() {
             std::cout << "shaders reloaded" << std::endl;
         }
 
-        // model.transform->rotate(glm::vec3(0.1f, 1.0f, 0.0f));
-
         renderer.submit(&model);
         renderer.submit(&ground);
         renderer.render(&camera);
