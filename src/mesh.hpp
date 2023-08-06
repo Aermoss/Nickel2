@@ -23,14 +23,13 @@ namespace nickel2 {
             Buffer* vertexBuffer;
             Buffer* indexBuffer;
             VertexArray* vertexArray;
-            bool destroyTransform;
 
             void setupMesh();
 
         public:
             Transform* transform;
             
-            Mesh(std::vector <Vertex> vertices, std::vector <uint32_t> indices, Material& material, Transform* transform = nullptr);
+            Mesh(std::vector <Vertex> vertices, std::vector <uint32_t> indices, Material& material, Transform* parent = nullptr);
             ~Mesh();
 
             void render(Shader* shader, bool useTexture = true);

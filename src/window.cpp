@@ -84,6 +84,10 @@ namespace nickel2 {
         this->title = title;
     }
 
+    GLFWwindow* Window::getGLFWWindow() {
+        return window;
+    }
+
     std::string Window::getTitle() {
         return title;
     }

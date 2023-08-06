@@ -118,6 +118,8 @@ namespace nickel2 {
     }
 
     void Model::render(Shader* shader, bool useTexture) {
+        transform->updateWorldMatrix(false);
+
         for (uint32_t i = 0; i < meshes.size(); i++) {
             meshes[i].render(shader, useTexture);
         }

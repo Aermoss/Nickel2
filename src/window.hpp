@@ -33,6 +33,7 @@ namespace nickel2 {
             void setEvent(std::string name, windowEvent_t func);
             void getSize(int32_t* width, int32_t* height);
             void setTitle(const char* title);
+            GLFWwindow* getGLFWWindow();
             std::string getTitle();
             bool shouldClose();
             void swapBuffers();

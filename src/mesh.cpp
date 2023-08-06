@@ -19,15 +19,14 @@ namespace nickel2 {
         vertexArray->unbind();
     }
 
-    Mesh::Mesh(std::vector <Vertex> vertices, std::vector <uint32_t> indices, Material& material, Transform* transform)
+    Mesh::Mesh(std::vector <Vertex> vertices, std::vector <uint32_t> indices, Material& material, Transform* parent)
         : vertices(vertices), indices(indices), material(material) {
 
-        if (transform == nullptr) {
-            this->transform = new Transform();
-            destroyTransform = true;
-        } else {
-            this->transform = transform;
-            destroyTransform = false;
+        transform = new Transform();
+
+        if (parent != nullptr) {
+            transform->parent = parent;
+            parent->children.push_back(transform);
         }
 
         setupMesh();
@@ -44,7 +43,7 @@ namespace nickel2 {
         shader->setUniform1f("roughnessDefault", material.roughness);
         shader->setUniform1f("metallicDefault", material.metallic);
         shader->setUniform1f("ambientDefault", 0.5f);
-        glm::mat4 matrix = transform->get();
+        glm::mat4 matrix = transform->getWorldMatrix();
         shader->setUniformMatrix3fv("modelMatrix", (float*) glm::value_ptr(glm::transpose(glm::inverse(glm::mat3(matrix)))));
         shader->setUniformMatrix4fv("model", glm::value_ptr(matrix));
 
@@ -77,11 +76,8 @@ namespace nickel2 {
     }
 
     void Mesh::destroy() {
-        if (destroyTransform) {
-            transform->destroy();
-            delete transform;
-        }
-            
+        transform->destroy();
+        delete transform;
         vertexBuffer->destroy();
         indexBuffer->destroy();
         vertexArray->destroy();
