@@ -1,4 +1,4 @@
-#include "buffer.hpp"
+#include <nickel2/buffer.hpp>
 
 namespace nickel2 {
     Buffer::Buffer(uint32_t type) : type(type) {

@@ -1,4 +1,4 @@
-#include "vertexArray.hpp"
+#include <nickel2/vertexArray.hpp>
 
 namespace nickel2 {
     VertexArray::VertexArray() {

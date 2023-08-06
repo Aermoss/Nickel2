@@ -1,16 +1,17 @@
-#include "input.hpp"
-
+#include <nickel2/input.hpp>
 
 namespace nickel2 {
-    double scrollX = 0.0, scrollY = 0.0;
-    
-    void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
-        scrollX += xoffset;
-        scrollY += yoffset;
+    namespace input {
+        double scrollX = 0.0, scrollY = 0.0;
+        
+        void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+            scrollX += xoffset;
+            scrollY += yoffset;
+        }
     }
 
     InputHandler::InputHandler(GLFWwindow* window) : window(window), scrollX(scrollX), scrollY(scrollY) {
-        glfwSetScrollCallback(window, scrollCallback);
+        glfwSetScrollCallback(window, input::scrollCallback);
     }
 
     InputHandler::~InputHandler() {

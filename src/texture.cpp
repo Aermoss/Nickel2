@@ -1,4 +1,4 @@
-#include "texture.hpp"
+#include <nickel2/texture.hpp>
 
 namespace nickel2 {
     const char* textureTypes[] = {

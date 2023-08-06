@@ -1,4 +1,4 @@
-#include "mesh.hpp"
+#include <nickel2/mesh.hpp>
 
 namespace nickel2 {
     void Mesh::setupMesh() {

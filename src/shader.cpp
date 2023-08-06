@@ -1,4 +1,4 @@
-#include "shader.hpp"
+#include <nickel2/shader.hpp>
 
 namespace nickel2 {
     uint32_t Shader::compileShader(uint32_t type, const char* source) {

@@ -31,6 +31,7 @@ namespace nickel2 {
 
             uint32_t getUniqueWindowID();
             uint32_t registerWindow(Window* window);
+            void pollEvents();
             void removeWindow(uint32_t id);
             void destroy();
     };

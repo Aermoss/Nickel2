@@ -9,6 +9,7 @@
 #include <stb/stb_image.h>
 
 #include "context.hpp"
+#include "color.hpp"
 #include "input.hpp"
 
 namespace nickel2 {
@@ -23,16 +24,19 @@ namespace nickel2 {
 
         public:
             InputHandler* input;
+            Color backgroundColor;
             float deltaTime, currentTime, lastTime;
+            int32_t height, width;
             
-            Window(uint32_t width, uint32_t height, const char* title, bool vsync = false, bool fullscreen = false, bool icon = true);
+            Window(int32_t width, int32_t height, const char* title, const Color& backgroundColor = {0.0f, 0.0f, 0.0f, 255.0f}, bool vsync = false, bool fullscreen = false, bool icon = true);
             ~Window();
 
             void update();
             void clear();
             void setEvent(std::string name, windowEvent_t func);
-            void getSize(int32_t* width, int32_t* height);
+            void setVSync(bool vsync);
             void setTitle(const char* title);
+            void getSize(int32_t* width, int32_t* height);
             GLFWwindow* getGLFWWindow();
             std::string getTitle();
             bool shouldClose();

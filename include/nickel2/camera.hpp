@@ -17,7 +17,7 @@ namespace nickel2 {
             float pitch, yaw, roll, sensitivity, near, far, fov;
             glm::vec3 position, front, up;
 
-            FPSCamera(Window* window, glm::vec3 position, float fov, float sensitivity, float near, float far);
+            FPSCamera(Window* window, glm::vec3 position = {0.0f, 0.0f, 0.0f}, float fov = 90.0f, float sensitivity = 100.0f, float near = 0.01f, float far = 1000.0f);
             ~FPSCamera();
 
             void processInputs();

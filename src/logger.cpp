@@ -2,7 +2,7 @@
 #include "Windows.h"
 #endif
 
-#include "logger.hpp"
+#include <nickel2/logger.hpp>
 
 namespace nickel2 {
     void setTextAttribute(uint32_t color) {

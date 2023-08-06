@@ -137,8 +137,10 @@
 #define NICKEL2_KEY_MENU GLFW_KEY_MENU
 
 namespace nickel2 {
-    extern double scrollX, scrollY;
-    void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+    namespace input {
+        extern double scrollX, scrollY;
+        void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+    }
 
     class InputHandler {
         private:

@@ -1,4 +1,4 @@
-#include "utils.hpp"
+#include <nickel2/utils.hpp>
 
 namespace nickel2 {
     std::string readFile(const char* filePath) {

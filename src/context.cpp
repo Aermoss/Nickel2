@@ -1,4 +1,4 @@
-#include "context.hpp"
+#include <nickel2/context.hpp>
 
 namespace nickel2 {
     Context* context = nullptr;
@@ -32,8 +32,8 @@ namespace nickel2 {
 
         context->logger->log(NICKEL2_INFO, (
             std::string("found display device:\n") + \
-            "            > size: " + std::to_string(displaySize.x) + " x " + std::to_string(displaySize.y) + "\n" + \
-            "            > refresh rate: " + std::to_string(displayRefreshRate)).c_str()
+            "               > size: " + std::to_string(displaySize.x) + " x " + std::to_string(displaySize.y) + "\n" + \
+            "               > refresh rate: " + std::to_string(displayRefreshRate)).c_str()
         );
     }
 
@@ -53,6 +53,10 @@ namespace nickel2 {
         // a window named "Moss Editor" has been registered with id 1.
         logger->log(NICKEL2_INFO, ("window named \"" + windows[id]->getTitle() + "\" was registered with id: " + std::to_string(id) + ".").c_str());
         return id;
+    }
+
+    void Context::pollEvents() {
+        glfwPollEvents();
     }
 
     void Context::removeWindow(uint32_t id) {

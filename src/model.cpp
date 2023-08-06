@@ -1,4 +1,4 @@
-#include "model.hpp"
+#include <nickel2/model.hpp>
 
 namespace nickel2 {
     void Model::loadModel(std::string const& path) {

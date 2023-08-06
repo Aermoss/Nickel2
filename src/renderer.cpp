@@ -1,4 +1,4 @@
-#include "renderer.hpp"
+#include <nickel2/renderer.hpp>
 
 namespace nickel2 {
     uint32_t sphereVAO = 0;

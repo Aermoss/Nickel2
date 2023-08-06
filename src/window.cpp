@@ -1,7 +1,8 @@
-#include "window.hpp"
+#include <nickel2/window.hpp>
 
 namespace nickel2 {
-    Window::Window(uint32_t width, uint32_t height, const char* title, bool vsync, bool fullscreen, bool icon) : title(title) {
+    Window::Window(int32_t width, int32_t height, const char* title, const Color& backgroundColor, bool vsync, bool fullscreen, bool icon)
+        : width(width), height(height), title(title), backgroundColor(backgroundColor) {
         Context* context = getContext();
         id = context->registerWindow(this);
         glfwWindowHint(GLFW_SAMPLES, 1);
@@ -33,10 +34,10 @@ namespace nickel2 {
 
             context->logger->log(NICKEL2_INFO, (
                 std::string("found renderer device:\n") + \
-                "            > vendor: " + context->vendorName + "\n" + \
-                "            > renderer: " + context->rendererName + "\n" + \
-                "            > version: " + context->glVersion + "\n" + \
-                "            > glsl: " + context->glslVersion).c_str()
+                "               > vendor: " + context->vendorName + "\n" + \
+                "               > renderer: " + context->rendererName + "\n" + \
+                "               > version: " + context->glVersion + "\n" + \
+                "               > glsl: " + context->glslVersion).c_str()
             );
 
             uint32_t count = context->glExtensions.empty() ? 0 : 1;
@@ -55,8 +56,15 @@ namespace nickel2 {
     }
 
     void Window::update() {
-        if (events.find("update") != events.end())
-            events["update"]();
+        glfwMakeContextCurrent(window);
+
+        int32_t width, height;
+        glfwGetWindowSize(window, &width, &height);
+
+        if (width != this->width || height != this->height) {
+            this->width = width, this->height = height;
+            glViewport(0, 0, width, height);
+        }
 
         currentTime = glfwGetTime();
 
@@ -65,9 +73,13 @@ namespace nickel2 {
             
         deltaTime = currentTime - lastTime;
         lastTime = currentTime;
+
+        if (events.find("update") != events.end())
+            events["update"]();
     }
 
     void Window::clear() {
+        glClearColor(backgroundColor.r / 255.0f, backgroundColor.g / 255.0f, backgroundColor.b / 255.0f, backgroundColor.a / 255.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
@@ -75,13 +87,17 @@ namespace nickel2 {
         events[name] = func;
     }
 
-    void Window::getSize(int32_t* width, int32_t* height) {
-        glfwGetWindowSize(window, width, height);
+    void Window::setVSync(bool vsync) {
+        glfwSwapInterval(vsync ? 1 : 0);
     }
 
     void Window::setTitle(const char* title) {
         glfwSetWindowTitle(window, title);
         this->title = title;
+    }
+
+    void Window::getSize(int32_t* width, int32_t* height) {
+        glfwGetWindowSize(window, width, height);
     }
 
     GLFWwindow* Window::getGLFWWindow() {

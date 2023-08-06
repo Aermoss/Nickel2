@@ -1,4 +1,4 @@
-#include "camera.hpp"
+#include <nickel2/camera.hpp>
 
 namespace nickel2 {
     FPSCamera::FPSCamera(Window* window, glm::vec3 position, float fov, float sensitivity, float near, float far)
@@ -71,7 +71,7 @@ namespace nickel2 {
             sin(glm::radians(yaw)) * cos(glm::radians(pitch))
         ));
 
-        glm::mat4 proj = glm::perspective(glm::radians(fov), (float) (width / height), near, far);
+        glm::mat4 proj = glm::perspective(glm::radians(fov), (float) width / (float) height, near, far);
         glm::mat4 view = glm::lookAt(position, position + front, up);
 
         shader->use();
