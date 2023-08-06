@@ -17,7 +17,7 @@ namespace nickel2 {
     class Transform {
         private:
             glm::mat4 matrix;
-            glm::vec3 position, scale;
+            glm::vec3 position, _scale;
             glm::quat rotation;
             bool dirtyMatrix, dirtyDOF;
         
@@ -32,7 +32,10 @@ namespace nickel2 {
             void setScale(const glm::vec3& scale);
             void setRotation(const glm::vec3& rotation);
             void setRotationQuat(const glm::quat& rotation);
-            void rotateBy(const glm::vec3& rotation);
+            
+            void translate(const glm::vec3& vector);
+            void scale(const glm::vec3& vector);
+            void rotate(const glm::vec3& vector);
 
             glm::vec3 getPosition();
             glm::vec3 getWorldPosition();
@@ -42,7 +45,7 @@ namespace nickel2 {
             glm::quat getWorldRotationQuat();
 
             void overrideMatrix(glm::mat4 matrix);
-            void updateWorldMatrix(bool dirtyParent);
+            void updateWorldMatrix(bool dirtyParent = false);
             glm::mat4 getLocalMatrix() const;
             glm::mat4 getParentMatrix() const;
             glm::mat4 getWorldMatrix() const;

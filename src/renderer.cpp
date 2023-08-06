@@ -512,7 +512,7 @@ namespace nickel2 {
         queue.push_back(model);
     }
 
-    void Renderer::render(FPSCamera* camera) {
+    void Renderer::render(Camera* camera) {
         updateLights();
         camera->updateMatrices(shader);
         camera->updateMatrices(basicShader);

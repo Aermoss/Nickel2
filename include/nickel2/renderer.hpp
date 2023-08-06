@@ -44,7 +44,7 @@ namespace nickel2 {
             void renderBackground();
             void updateLights();
             void submit(Model* model);
-            void render(FPSCamera* camera);
+            void render(Camera* camera);
             void destroy();
     };
 }

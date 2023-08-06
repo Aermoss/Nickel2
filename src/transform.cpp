@@ -4,7 +4,7 @@ namespace nickel2 {
     Transform::Transform() {
         matrix = glm::mat4(1.0f);
         position = glm::vec3(0.0f);
-        scale = glm::vec3(1.0f);
+        _scale = glm::vec3(1.0f);
         rotation = glm::quat(glm::vec3(0.0f));
         dirtyDOF = dirtyMatrix = false;
         parent = nullptr;
@@ -20,7 +20,7 @@ namespace nickel2 {
     }
 
     void Transform::setScale(const glm::vec3& scale) {
-        this->scale = scale;
+        this->_scale = scale;
         dirtyDOF = true;
     }
 
@@ -34,8 +34,19 @@ namespace nickel2 {
         dirtyDOF = true;
     }
 
-    void Transform::rotateBy(const glm::vec3& rotation) {
-        setRotation(getRotation() + rotation);
+    void Transform::translate(const glm::vec3& vector) {
+        this->position += vector;
+        dirtyDOF = true;
+    }
+
+    void Transform::scale(const glm::vec3& vector) {
+        this->_scale *= vector;
+        dirtyDOF = true;
+    }
+
+    void Transform::rotate(const glm::vec3& vector) {
+        this->rotation = glm::quat(glm::eulerAngles(rotation) + vector);
+        dirtyDOF = true;
     }
 
     glm::vec3 Transform::getPosition() {
@@ -47,7 +58,7 @@ namespace nickel2 {
     }
 
     glm::vec3 Transform::getScale() {
-        return scale;
+        return _scale;
     }
 
     glm::vec3 Transform::getRotation() {
@@ -65,7 +76,7 @@ namespace nickel2 {
 
     void Transform::overrideMatrix(glm::mat4 matrix) {
         dirtyDOF = dirtyMatrix = true;
-        matrix = matrix;
+        this->matrix = matrix;
     }
 
     void Transform::updateWorldMatrix(bool dirtyParent) {
@@ -85,7 +96,7 @@ namespace nickel2 {
     glm::mat4 Transform::getLocalMatrix() const {
         glm::mat4 T = glm::translate(glm::mat4(1.0f), position);
         glm::mat4 R = glm::toMat4(rotation);
-        glm::mat4 S = glm::scale(glm::mat4(1.0f), scale);
+        glm::mat4 S = glm::scale(glm::mat4(1.0f), _scale);
         return T * R * S;
     }
 
@@ -99,7 +110,7 @@ namespace nickel2 {
 
     void Transform::reset() {
         matrix = glm::mat4(1.0f);
-        position = glm::vec3(0.0f), scale = glm::vec3(0.0f);
+        position = glm::vec3(0.0f), _scale = glm::vec3(0.0f);
         rotation = glm::quat(glm::vec3(0.0f));
         dirtyDOF = dirtyMatrix = false;
     }
