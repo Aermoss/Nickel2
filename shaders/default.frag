@@ -94,7 +94,7 @@ vec3 gridSamplingDisk[20] = vec3[](
    vec3(0.0f, 1.0f,  1.0f), vec3( 0.0f, -1.0f,  1.0f), vec3( 0.0f, -1.0f, -1.0f), vec3( 0.0f, 1.0f, -1.0f)
 );
 
-float far_plane = 1000.0f;
+float farPlane = 1000.0f;
 
 float shadowCalculation(int lightIndex) {
     if (lightIndex != 0 || enableShadows == 0) return 0.0f;
@@ -102,14 +102,15 @@ float shadowCalculation(int lightIndex) {
     vec3 fragToLight = data.position - lightPositions[lightIndex];
     float currentDepth = length(fragToLight);
     float shadow = 0.0f;
-    float bias = 0.2f;
-    int samples = 20;
+    float bias = 0.15f;
+    int samples = 22;
     float viewDistance = length(data.cameraPosition - data.position);
-    float diskRadius = (1.0f + (viewDistance / far_plane)) / 25.0f;
+    float diskRadius = (1.0f + (viewDistance / farPlane)) / 125.0f;
 
     for (int i = 0; i < samples; ++i) {
         float closestDepth = texture(depthMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
-        closestDepth *= far_plane;
+        closestDepth *= farPlane;
+
         if (currentDepth - bias > closestDepth)
             shadow += 1.0f;
     }

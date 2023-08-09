@@ -21,9 +21,10 @@ namespace nickel2 {
             bool running;
 
         public:
-            std::string vendorName, rendererName, glVersion, glslVersion, glExtensions;
+            std::string vendorName, rendererName, glVersion, glslVersion;
             uint32_t displayRefreshRate;
             glm::ivec2 displaySize;
+            int32_t extensionCount;
             Logger* logger;
 
             Context(uint32_t logLevel = NICKEL2_INFO);

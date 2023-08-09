@@ -8,7 +8,7 @@ A game engine written in C++ using OpenGL.
 
 int main() {
     nickel2::Context context;
-    nickel2::Window window(1200, 600, "Nickel2", nickel2::Color(0, 64, 64), true);
+    nickel2::Window window(1200, 600, "Nickel2", nickel2::Color(0, 0, 0), true);
 
     nickel2::Renderer renderer(&window);
     nickel2::FirstPersonCamera camera(&window, glm::vec3(0.0f, 0.0f, 0.0f), 90.0f, 100.0f, 0.01f, 1000.0f);

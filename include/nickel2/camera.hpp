@@ -17,8 +17,9 @@ namespace nickel2 {
             float pitch, yaw, roll, near, far, fov;
             Transform* transform;
             glm::vec3 front, up;
+            bool overrideMatrix;
 
-            Camera(Window* window, float fov = 90.0f, float near = 0.01f, float far = 1000.0f);
+            Camera(Window* window, float fov = 90.0f, float near = 0.01f, float far = 1000.0f, bool overrideMatrix = true);
             ~Camera();
 
             void updateMatrices(Shader* shader);

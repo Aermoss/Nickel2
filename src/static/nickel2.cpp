@@ -14,5 +14,4 @@
 #include "../utils.cpp"
 
 #include "../glad/glad.c"
-#include "../imgui/imgui.cpp"
 #include "../stb/stb.cpp"

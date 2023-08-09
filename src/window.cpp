@@ -1,14 +1,20 @@
 #include <nickel2/window.hpp>
 
 namespace nickel2 {
+    void glfwErrorCallback(int errorCode, const char* description) {
+        getContext()->logger->log(NICKEL2_ERROR, ("glfw: code: " + std::to_string(errorCode) + ", description: " + description + ".").c_str());
+    }
+
     Window::Window(int32_t width, int32_t height, const char* title, const Color& backgroundColor, bool vsync, bool fullscreen, bool icon)
         : width(width), height(height), title(title), backgroundColor(backgroundColor) {
         Context* context = getContext();
         id = context->registerWindow(this);
         glfwWindowHint(GLFW_SAMPLES, 1);
-        glfwWindowHint(GLFW_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_VERSION_MINOR, 6);
-        // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+        glfwSetErrorCallback(glfwErrorCallback);
         window = glfwCreateWindow(width, height, title, fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
         if (window) { context->logger->log(NICKEL2_INFO, ("window named \"" + std::string(title) + "\" was created successfully, id: " + std::to_string(id) + ".").c_str());}
         else { context->logger->log(NICKEL2_FATAL_ERROR, ("an error occurred while creating the window named \"" + std::string(title) + "\", id: " + std::to_string(id) + ".").c_str()); }
@@ -28,9 +34,9 @@ namespace nickel2 {
         if (context->glVersion.empty()) {
             context->glVersion = std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION)));
             context->glslVersion = std::string(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
-            context->glExtensions = std::string(reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS)));
             context->vendorName = std::string(reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
             context->rendererName = std::string(reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
+            glGetIntegerv(GL_NUM_EXTENSIONS, &context->extensionCount);
 
             context->logger->log(NICKEL2_INFO, (
                 std::string("found renderer device:\n") + \
@@ -40,14 +46,7 @@ namespace nickel2 {
                 "               > glsl: " + context->glslVersion).c_str()
             );
 
-            uint32_t count = context->glExtensions.empty() ? 0 : 1;
-
-            for (uint32_t i = 0; i < context->glExtensions.size(); i++) {
-                if (context->glExtensions[i] == ' ')
-                    count++;
-            }
-
-            context->logger->log(NICKEL2_INFO, ("supported extension count: " + std::to_string(count)).c_str());
+            context->logger->log(NICKEL2_INFO, ("supported extension count: " + std::to_string(context->extensionCount)).c_str());
         }
     }
 

@@ -1,8 +1,8 @@
 #include <nickel2/camera.hpp>
 
 namespace nickel2 {
-    Camera::Camera(Window* window, float fov, float near, float far)
-        : window(window), fov(fov), near(near), far(far) {
+    Camera::Camera(Window* window, float fov, float near, float far, bool overrideMatrix)
+        : window(window), fov(fov), near(near), far(far), overrideMatrix(overrideMatrix) {
         pitch = 0.0f, yaw = 0.0f, roll = 0.0f;
         transform = new Transform();
         front = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -17,17 +17,22 @@ namespace nickel2 {
         int32_t width, height;
         window->getSize(&width, &height);
 
-        front = glm::normalize(glm::vec3(
-            cos(glm::radians(yaw)) * cos(glm::radians(pitch)),
-            sin(glm::radians(pitch)),
-            sin(glm::radians(yaw)) * cos(glm::radians(pitch))
-        ));
-
         glm::mat4 proj = glm::perspective(glm::radians(fov), (float) width / (float) height, near, far);
         glm::vec3 position = transform->getPosition();
-        transform->overrideMatrix(glm::lookAt(position, position + front, up));
+
+        if (overrideMatrix) {
+            front = glm::normalize(glm::vec3(
+                cos(glm::radians(yaw)) * cos(glm::radians(pitch)),
+                sin(glm::radians(pitch)),
+                sin(glm::radians(yaw)) * cos(glm::radians(pitch))
+            ));
+
+            transform->overrideMatrix(glm::lookAt(position, position + front, up));
+        }
+
         transform->updateWorldMatrix();
         glm::mat4 view = transform->getWorldMatrix();
+        if (!overrideMatrix) view = glm::inverse(view);
 
         shader->use();
         shader->setUniform3fv("cameraPosition", glm::value_ptr(position));
@@ -46,7 +51,7 @@ namespace nickel2 {
     }
 
     FirstPersonCamera::FirstPersonCamera(Window* window, float fov, float sensitivity, float near, float far)
-        : Camera(window, fov, near, far), window(window), sensitivity(sensitivity) {
+        : Camera(window, fov, near, far, true), window(window), sensitivity(sensitivity) {
         normalSpeed = 0.1f, sprintSpeed = 0.2f;
     }
 

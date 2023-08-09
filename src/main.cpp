@@ -5,24 +5,23 @@
 
 int main() {
     nickel2::Context context;
-    nickel2::Window window(1200, 600, "Nickel2", nickel2::Color(0, 64, 64), true);
+    nickel2::Window window(1200, 600, "Nickel2", nickel2::Color(0, 0, 0), true);
 
     nickel2::Renderer renderer(&window, "res/hdr_textures/train_station.hdr");
     nickel2::FirstPersonCamera camera(&window, 90.0f, 100.0f, 0.01f, 1000.0f);
 
     renderer.lights = {
-        nickel2::Light(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(1.0f, 1.0f, 1.0f), 3.0f)
+        // nickel2::Light(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(1.0f, 1.0f, 1.0f), 3.0f)
     };
 
-    nickel2::Model model("res/deagle.obj");
+    nickel2::Model model("res/sponza/sponza.obj");
     model.transform->setRotation(glm::vec3(0.0f, 0.0f, 0.0f));
-    model.transform->setScale(glm::vec3(1.0));
+    model.transform->setScale(glm::vec3(0.01f));
 
     nickel2::Model ground("res/cube.obj");
-    ground.transform->setScale(glm::vec3(10.0f, 1.0f, 10.0f));
     ground.transform->setPosition(glm::vec3(0.0f, -2.0f, 0.0f));
-
-    glm::vec3 rotation = glm::vec3(0.1f, 0.2f, 0.0f);
+    ground.transform->setRotation(glm::vec3(0.0f, 0.0f, 0.0f));
+    ground.transform->setScale(glm::vec3(10.0f, 1.0f, 10.0f));
 
     float fov = 45.0f;
     float lastScrollY = 0.0;
@@ -40,8 +39,8 @@ int main() {
         realPitch = camera.pitch;
         realYaw = camera.yaw;
 
-        interpolatedPitch = glm::lerp(interpolatedPitch, realPitch, 0.5f);
-        interpolatedYaw = glm::lerp(interpolatedYaw, realYaw, 0.5f);
+        interpolatedPitch = glm::lerp(interpolatedPitch, realPitch, 0.2f);
+        interpolatedYaw = glm::lerp(interpolatedYaw, realYaw, 0.2f);
         camera.pitch = interpolatedPitch;
         camera.yaw = interpolatedYaw;
 
@@ -53,9 +52,6 @@ int main() {
         if (fov < 5.0f) fov = 5.0f;
 
         camera.fov = glm::lerp(camera.fov, fov, 0.2f);
-
-        rotation += glm::vec3(0.01f, 0.02f, 0.0f);
-        model.transform->setRotation(rotation);
 
         if (window.input->getKey(NICKEL2_KEY_Q)) {
             renderer.removeHDRTexture();
@@ -71,7 +67,7 @@ int main() {
         }
 
         renderer.submit(&model);
-        renderer.submit(&ground);
+        // renderer.submit(&ground);
         renderer.render(&camera);
         window.swapBuffers();
     }
