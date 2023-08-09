@@ -4,7 +4,7 @@ A game engine written in C++ using OpenGL.
 # Examples
 ## Creating a window
 ```c++
-#include "nickel2.hpp"
+#include <nickel2/nickel2.hpp>
 
 int main() {
     nickel2::Context context;
