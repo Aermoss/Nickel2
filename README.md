@@ -19,9 +19,9 @@ int main() {
 
     while (!window.shouldClose()) {
         context.pollEvents();
+        camera.processInputs();
         window.update();
         window.clear();
-        camera.processInputs();
         renderer.render(&camera);
         window.swapBuffers();
     }
