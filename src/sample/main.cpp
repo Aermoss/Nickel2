@@ -11,12 +11,12 @@ int main() {
     nickel2::FirstPersonCamera camera(&window, 90.0f, 100.0f, 0.01f, 1000.0f);
 
     renderer.lights = {
-        // nickel2::Light(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(1.0f, 1.0f, 1.0f), 3.0f)
+        nickel2::Light(glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(1.0f, 1.0f, 1.0f), 3.0f)
     };
 
-    nickel2::Model model("res/sponza/sponza.obj");
+    nickel2::Model model("res/deagle.obj");
     model.transform->setRotation(glm::vec3(0.0f, 0.0f, 0.0f));
-    model.transform->setScale(glm::vec3(0.01f));
+    model.transform->setScale(glm::vec3(1.0f));
 
     nickel2::Model ground("res/cube.obj");
     ground.transform->setPosition(glm::vec3(0.0f, -2.0f, 0.0f));
@@ -67,7 +67,7 @@ int main() {
         }
 
         renderer.submit(&model);
-        // renderer.submit(&ground);
+        renderer.submit(&ground);
         renderer.render(&camera);
         window.swapBuffers();
     }

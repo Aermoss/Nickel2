@@ -4,6 +4,9 @@
 
 #include <glad/glad.h>
 
+#define NICKEL2_ARRAY_BUFFER GL_ARRAY_BUFFER
+#define NICKEL2_ELEMENT_ARRAY_BUFFER GL_ELEMENT_ARRAY_BUFFER
+
 namespace nickel2 {
     class Buffer {
         private:

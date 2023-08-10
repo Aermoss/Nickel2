@@ -14,15 +14,15 @@ namespace nickel2 {
         private:
             uint32_t id;
             uint32_t compileShader(uint32_t type, const char* source);
-            uint32_t createProgram(std::string vertexSource, std::string fragmentSource, std::string geometrySource = "");
+            uint32_t createProgram(const std::string& vertexSource, const std::string& fragmentSource, const std::string& geometrySource = "");
 
         public:
-            Shader(std::string vertexSource, std::string fragmentSource, std::string geometrySource = "");
+            Shader(const std::string& vertexSource, const std::string& fragmentSource, const std::string& geometrySource = "");
             ~Shader();
 
             void use();
             void unuse();
-            void reload(std::string vertexSource, std::string fragmentSource, std::string geometrySource = "");
+            void reload(const std::string& vertexSource, const std::string& fragmentSource, const std::string& geometrySource = "");
             void destroy();
             int32_t getUniformLocation(const char* name);
             void setUniform1i(const char* name, int32_t x);

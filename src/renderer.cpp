@@ -1,16 +1,16 @@
 #include <nickel2/renderer.hpp>
 
 namespace nickel2 {
-    uint32_t sphereVAO = 0;
-    uint32_t indexCount;
+    VertexArray* sphereVertexArray = nullptr;
+    Buffer* sphereVertexBuffer = nullptr;
+    Buffer* sphereIndexBuffer = nullptr;
+    uint32_t sphereIndexCount;
 
     void renderSphere() {
-        if (sphereVAO == 0) {
-            glGenVertexArrays(1, &sphereVAO);
-
-            uint32_t vbo, ibo;
-            glGenBuffers(1, &vbo);
-            glGenBuffers(1, &ibo);
+        if (sphereVertexArray == nullptr) {
+            sphereVertexArray = new VertexArray();
+            sphereVertexBuffer = new Buffer(NICKEL2_ARRAY_BUFFER);
+            sphereIndexBuffer = new Buffer(NICKEL2_ELEMENT_ARRAY_BUFFER);
 
             std::vector <glm::vec3> positions;
             std::vector <glm::vec2> uv;
@@ -53,8 +53,8 @@ namespace nickel2 {
                 oddRow = !oddRow;
             }
 
-            indexCount = static_cast <uint32_t>(indices.size());
-            std::vector<float> data;
+            sphereIndexCount = static_cast<uint32_t>(indices.size());
+            std::vector <float> data;
 
             for (uint32_t i = 0; i < positions.size(); ++i) {
                 data.push_back(positions[i].x);
@@ -73,29 +73,32 @@ namespace nickel2 {
                 }
             }
 
-            glBindVertexArray(sphereVAO);
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), &indices[0], GL_STATIC_DRAW);
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) 0);
-            glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) (3 * sizeof(float)));
-            glEnableVertexAttribArray(2);
-            glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) (6 * sizeof(float)));
+            sphereVertexArray->bind();
+            sphereVertexBuffer->bind();
+            sphereIndexBuffer->bind();
+            sphereVertexBuffer->bufferData(data.size() * sizeof(float), data.data());
+            sphereIndexBuffer->bufferData(indices.size() * sizeof(uint32_t), indices.data());
+            sphereVertexArray->defineAttrib(0, 3, 8 * sizeof(float), (void*) 0);
+            sphereVertexArray->defineAttrib(1, 3, 8 * sizeof(float), (void*) (3 * sizeof(float)));
+            sphereVertexArray->defineAttrib(2, 2, 8 * sizeof(float), (void*) (6 * sizeof(float)));
+            sphereIndexBuffer->unbind();
+            sphereVertexBuffer->unbind();
+            sphereVertexArray->unbind();
         }
 
-        glBindVertexArray(sphereVAO);
-        glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
+        sphereVertexArray->bind();
+        sphereIndexBuffer->bind();
+        glDrawElements(GL_TRIANGLE_STRIP, sphereIndexCount, GL_UNSIGNED_INT, 0);
+        sphereIndexBuffer->unbind();
+        sphereVertexArray->unbind();
     }
 
-    uint32_t cubeVAO = 0;
-    uint32_t cubeVBO;
+    VertexArray* cubeVertexArray = nullptr;
+    Buffer* cubeVertexBuffer = nullptr;
 
     void renderCube() {
-        if (cubeVAO == 0) {
-            float vertices[] = {
+        if (cubeVertexArray == nullptr) {
+            std::vector <float> vertices = {
                 -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f,
                  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f,
                  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f,
@@ -134,52 +137,78 @@ namespace nickel2 {
                 -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f
             };
 
-            glGenVertexArrays(1, &cubeVAO);
-            glGenBuffers(1, &cubeVBO);
-            glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-            glBindVertexArray(cubeVAO);
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-            glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-            glEnableVertexAttribArray(2);
-            glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glBindVertexArray(0);
+            cubeVertexArray = new VertexArray();
+            cubeVertexBuffer = new Buffer(NICKEL2_ARRAY_BUFFER);
+
+            cubeVertexArray->bind();
+            cubeVertexBuffer->bind();
+            cubeVertexBuffer->bufferData(vertices.size() * sizeof(float), vertices.data());
+            cubeVertexArray->defineAttrib(0, 3, 8 * sizeof(float), (void*) 0);
+            cubeVertexArray->defineAttrib(1, 3, 8 * sizeof(float), (void*) (3 * sizeof(float)));
+            cubeVertexArray->defineAttrib(2, 2, 8 * sizeof(float), (void*) (6 * sizeof(float)));
+            cubeVertexBuffer->unbind();
+            cubeVertexArray->unbind();
         }
 
-        glBindVertexArray(cubeVAO);
+        cubeVertexArray->bind();
         glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
+        cubeVertexArray->unbind();
     }
 
-    uint32_t quadVAO = 0;
-    uint32_t quadVBO;
+    VertexArray* quadVertexArray = nullptr;
+    Buffer* quadVertexBuffer = nullptr;
 
     void renderQuad() {
-        if (quadVAO == 0) {
-            float quadVertices[] = {
+        if (quadVertexArray == nullptr) {
+            std::vector <float> vertices = {
                 -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
                 -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
                  1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
                  1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
             };
 
-            glGenVertexArrays(1, &quadVAO);
-            glGenBuffers(1, &quadVBO);
-            glBindVertexArray(quadVAO);
-            glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-            glEnableVertexAttribArray(0);
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-            glEnableVertexAttribArray(1);
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+            quadVertexArray = new VertexArray();
+            quadVertexBuffer = new Buffer(NICKEL2_ARRAY_BUFFER);
+
+            quadVertexArray->bind();
+            quadVertexBuffer->bind();
+            quadVertexBuffer->bufferData(vertices.size() * sizeof(float), vertices.data());
+            quadVertexArray->defineAttrib(0, 3, 5 * sizeof(float), (void*) 0);
+            quadVertexArray->defineAttrib(1, 2, 5 * sizeof(float), (void*) (3 * sizeof(float)));
+            quadVertexBuffer->unbind();
+            quadVertexArray->unbind();
         }
 
-        glBindVertexArray(quadVAO);
+        quadVertexArray->bind();
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glBindVertexArray(0);
+        quadVertexArray->unbind();
+    }
+
+    void destroyRenderer() {
+        if (sphereVertexArray != nullptr) {
+            sphereVertexArray->destroy();
+            sphereVertexBuffer->destroy();
+            sphereIndexBuffer->destroy();
+            delete sphereVertexArray;
+            delete sphereVertexBuffer;
+            delete sphereIndexBuffer;
+        }
+
+        if (cubeVertexArray != nullptr) {
+            cubeVertexArray->destroy();
+            cubeVertexBuffer->destroy();
+            delete cubeVertexArray;
+            delete cubeVertexBuffer;
+        }
+
+        if (quadVertexArray != nullptr) {
+            quadVertexArray->destroy();
+            quadVertexBuffer->destroy();
+            delete quadVertexArray;
+            delete quadVertexBuffer;
+        }
+
+        getContext()->logger->log(NICKEL2_INFO, "renderer successfully destroyed.");
     }
 
     void Renderer::removeHDRTexture() {
@@ -205,7 +234,7 @@ namespace nickel2 {
         }
     }
 
-    void Renderer::loadHDRTexture(const char* filePath) {
+    void Renderer::loadHDRTexture(const std::string& filePath) {
         if (!useHDRTexture) {
             equirectangularToCubemapShader = new Shader(readFile("shaders/cubemap.vert"), readFile("shaders/equirectangularToCubemap.frag"));
             irradianceShader = new Shader(readFile("shaders/cubemap.vert"), readFile("shaders/irradianceConvolution.frag"));
@@ -231,7 +260,7 @@ namespace nickel2 {
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
 
-        hdrTexture = new Texture(filePath, 0, \
+        hdrTexture = new Texture(filePath.c_str(), 0, \
             {GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_RGB16F, GL_RGB, GL_FLOAT, GL_FALSE});
 
         glGenTextures(1, &envCubemap);
@@ -453,7 +482,7 @@ namespace nickel2 {
         shader->unuse();
     }
     
-    Renderer::Renderer(Window* window, const char* hdrTexturePath, glm::ivec2 depthMapSize) : window(window), depthMapSize(depthMapSize) {
+    Renderer::Renderer(Window* window, const std::string& hdrTexturePath, glm::ivec2 depthMapSize) : window(window), depthMapSize(depthMapSize) {
         shader = new Shader(readFile("shaders/default.vert"), readFile("shaders/default.frag"));
         basicShader = new Shader(readFile("shaders/default.vert"), readFile("shaders/basic.frag"));
         depthShader = new Shader(readFile("shaders/depth.vert"), readFile("shaders/depth.frag"), readFile("shaders/depth.geom"));
@@ -499,7 +528,7 @@ namespace nickel2 {
         glReadBuffer(GL_NONE);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        if (hdrTexturePath != "") {
+        if (!hdrTexturePath.empty()) {
             loadHDRTexture(hdrTexturePath);
         }
     }

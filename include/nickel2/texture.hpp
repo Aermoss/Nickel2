@@ -20,6 +20,8 @@ namespace nickel2 {
         int32_t pixelType, mipmap;
     };
 
+    class Shader;
+    
     class Texture {
         private:
             uint32_t id, slot;

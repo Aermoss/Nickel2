@@ -11,10 +11,9 @@
 
 #include "window.hpp"
 #include "logger.hpp"
+#include "renderer.hpp"
 
 namespace nickel2 {
-    class Window;
-    
     class Context {
         private:
             std::map <uint32_t, Window*> windows;

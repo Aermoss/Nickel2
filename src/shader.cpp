@@ -28,7 +28,7 @@ namespace nickel2 {
         } return shader;
     }
 
-    uint32_t Shader::createProgram(std::string vertexSource, std::string fragmentSource, std::string geometrySource) {
+    uint32_t Shader::createProgram(const std::string& vertexSource, const std::string& fragmentSource, const std::string& geometrySource) {
         Context* context = getContext();
         uint32_t vertexShader = compileShader(GL_VERTEX_SHADER, vertexSource.c_str());
         uint32_t fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentSource.c_str());
@@ -71,7 +71,7 @@ namespace nickel2 {
         } return program;
     }
 
-    Shader::Shader(std::string vertexSource, std::string fragmentSource, std::string geometrySource) {
+    Shader::Shader(const std::string& vertexSource, const std::string& fragmentSource, const std::string& geometrySource) {
         id = createProgram(vertexSource, fragmentSource, geometrySource);
     }
 
@@ -87,13 +87,14 @@ namespace nickel2 {
         glUseProgram(0);
     }
 
-    void Shader::reload(std::string vertexSource, std::string fragmentSource, std::string geometrySource) {
+    void Shader::reload(const std::string& vertexSource, const std::string& fragmentSource, const std::string& geometrySource) {
         glDeleteProgram(id);
         id = createProgram(vertexSource, fragmentSource, geometrySource);
     }
 
     void Shader::destroy() {
         glDeleteProgram(id);
+        context->logger->log(NICKEL2_INFO, ("shader program deleted successfully, id: " + std::to_string(id)).c_str());
     }
 
     int32_t Shader::getUniformLocation(const char* name) {

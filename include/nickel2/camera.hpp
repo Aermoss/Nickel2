@@ -4,11 +4,15 @@
 #include <glm/matrix.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "window.hpp"
 #include "transform.hpp"
+#include "window.hpp"
 #include "shader.hpp"
 
 namespace nickel2 {
+    class Transform;
+    class Window;
+    class Shader;
+    
     class Camera {
         private:
             Window* window;

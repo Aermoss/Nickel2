@@ -3,8 +3,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#define NICKEL2_ARRAY_BUFFER GL_ARRAY_BUFFER
-#define NICKEL2_ELEMENT_ARRAY_BUFFER GL_ELEMENT_ARRAY_BUFFER
+#define NICKEL2_VERSION "0.0.1"
 
 #define NICKEL2_TRUE 1
 #define NICKEL2_FALSE 0
@@ -15,18 +14,18 @@
 #define NICKEL2_UNSIGNED_INT GL_UNSIGNED_INT
 #define NICKEL2_UNSIGNED_BYTE GL_UNSIGNED_BYTE
 
+#include "color.hpp"
+#include "vertex.hpp"
+#include "context.hpp"
+#include "model.hpp"
+#include "mesh.hpp"
 #include "window.hpp"
 #include "buffer.hpp"
 #include "vertexArray.hpp"
-#include "vertex.hpp"
 #include "shader.hpp"
 #include "camera.hpp"
 #include "texture.hpp"
-#include "model.hpp"
-#include "mesh.hpp"
 #include "transform.hpp"
 #include "material.hpp"
 #include "renderer.hpp"
 #include "utils.hpp"
-#include "color.hpp"
-#include "context.hpp"

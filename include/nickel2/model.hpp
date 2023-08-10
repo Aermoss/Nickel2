@@ -11,13 +11,17 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include "mesh.hpp"
 #include "texture.hpp"
 #include "shader.hpp"
 #include "vertex.hpp"
 #include "material.hpp"
-#include "mesh.hpp"
 
 namespace nickel2 {
+    class Transform;
+    class Shader;
+    class Mesh;
+    
     class Model {
         private:
             std::vector <Mesh> meshes;

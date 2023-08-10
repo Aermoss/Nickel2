@@ -65,14 +65,16 @@ namespace nickel2 {
     }
 
     void Context::destroy() {
+        destroyRenderer();
+
         if (windows.size() != 0) {
             logger->log(NICKEL2_WARNING, "there are still active windows.");
         }
 
+        logger->log(NICKEL2_INFO, "context successfully destroyed.");
         context = nullptr;
         logger->destroy();
         delete logger;
-        logger->log(NICKEL2_INFO, "context successfully terminated.");
         glfwTerminate();
     }
 }

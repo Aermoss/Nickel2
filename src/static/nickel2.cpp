@@ -13,5 +13,5 @@
 #include "../context.cpp"
 #include "../utils.cpp"
 
-#include "../glad/glad.c"
-#include "../stb/stb.cpp"
+#include "../vendor/glad/glad.c"
+#include "../vendor/stb/stb.cpp"

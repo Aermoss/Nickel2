@@ -15,6 +15,9 @@
 #include "buffer.hpp"
 
 namespace nickel2 {
+    class Transform;
+    class Shader;
+    
     class Mesh {
         private:
             std::vector <Vertex> vertices;

@@ -3,6 +3,8 @@
 #include "texture.hpp"
 
 namespace nickel2 {
+    class Texture;
+    
     struct Material {
         const char* name;
         int32_t shadingMode;
