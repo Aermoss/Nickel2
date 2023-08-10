@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#define NICKEL2_VERSION "0.0.1"
+#define NICKEL2_VERSION "0.0.2"
 
 #define NICKEL2_TRUE 1
 #define NICKEL2_FALSE 0
