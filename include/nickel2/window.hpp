@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -18,7 +18,7 @@ namespace nickel2 {
     class Window {
         private:
             GLFWwindow* window;
-            std::map <std::string, windowEvent_t> events;
+            std::unordered_map <std::string, windowEvent_t> events;
             std::string title;
             uint32_t id;
 

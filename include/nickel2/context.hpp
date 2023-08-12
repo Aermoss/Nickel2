@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <iostream>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 #include <glm/glm.hpp>
 #include <glad/glad.h>
@@ -16,7 +16,7 @@
 namespace nickel2 {
     class Context {
         private:
-            std::map <uint32_t, Window*> windows;
+            std::unordered_map <uint32_t, Window*> windows;
             bool running;
 
         public:

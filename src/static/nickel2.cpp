@@ -11,6 +11,7 @@
 #include "../logger.cpp"
 #include "../input.cpp"
 #include "../context.cpp"
+#include "../scene.cpp"
 #include "../utils.cpp"
 
 #include "../vendor/glad/glad.c"

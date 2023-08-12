@@ -459,26 +459,20 @@ namespace nickel2 {
         shader->unuse();
     }
 
-    void Renderer::updateLights() {
+    void Renderer::updateLights(std::vector <Light>& lights) {
         std::vector <float> positions;
         std::vector <float> colors;
         std::vector <float> brightnesses;
 
-        for (uint32_t i = 0; i < lights.size(); i++) {
-            positions.push_back(lights[i].position.x);
-            positions.push_back(lights[i].position.y);
-            positions.push_back(lights[i].position.z);
-            colors.push_back(lights[i].color.x);
-            colors.push_back(lights[i].color.y);
-            colors.push_back(lights[i].color.z);
-            brightnesses.push_back(lights[i].brightness);
-        }
-
         shader->use();
         shader->setUniform1i("lightCount", lights.size());
-        shader->setUniform3fv("lightPositions", positions.data(), lights.size());
-        shader->setUniform3fv("lightColors", positions.data(), lights.size());
-        shader->setUniform1fv("lightBrightnesses", brightnesses.data(), lights.size());
+
+        for (uint32_t i = 0; i < lights.size(); i++) {
+            shader->setUniform3fv(("lightPositions[" + std::to_string(i) + "]").c_str(), (float*) glm::value_ptr(lights[i].position));
+            shader->setUniform3fv(("lightColors[" + std::to_string(i) + "]").c_str(), (float*) glm::value_ptr(lights[i].color));
+            shader->setUniform1f(("lightBrightnesses[" + std::to_string(i) + "]").c_str(), lights[i].brightness);
+        }
+
         shader->unuse();
     }
     
@@ -541,8 +535,14 @@ namespace nickel2 {
         queue.push_back(model);
     }
 
-    void Renderer::render(Camera* camera) {
-        updateLights();
+    void Renderer::render(Camera* camera, Scene* scene) {
+        std::vector <Light> lights = scene->getLights();
+
+        for (Model* object : scene->getObjects()) {
+            queue.push_back(object);
+        }
+
+        updateLights(lights);
         camera->updateMatrices(shader);
         camera->updateMatrices(basicShader);
 

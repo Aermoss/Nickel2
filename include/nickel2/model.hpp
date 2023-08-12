@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <unordered_map>
 #include <string>
 #include <vector>
 
@@ -24,13 +25,13 @@ namespace nickel2 {
     
     class Model {
         private:
-            std::vector <Mesh> meshes;
-            std::vector <Texture*> loadedTextures;
+            std::unordered_map <std::string, Mesh*> meshes;
+            std::unordered_map <std::string, Texture*> loadedTextures;
             std::string directory;
 
             void loadModel(std::string const& path);
             void processNode(aiNode* node, const aiScene* scene);
-            Mesh processMesh(aiMesh* mesh, const aiScene* scene);
+            void processMesh(aiMesh* mesh, const aiScene* scene);
             Texture* getMaterialTexture(aiMaterial* mat, aiTextureType type, uint32_t slot);
 
         public:
@@ -38,6 +39,10 @@ namespace nickel2 {
             
             Model(std::string const& path);
             ~Model();
+
+            std::unordered_map <std::string, Mesh*>& getMeshes();
+            std::unordered_map <std::string, Texture*>& getTextures();
+            const std::string& getDirectory();
 
             void render(Shader* shader, bool useTexture = true);
             void destroy();

@@ -22,7 +22,6 @@ namespace nickel2 {
         private:
             std::vector <Vertex> vertices;
             std::vector <uint32_t> indices;
-            Material material;
             Buffer* vertexBuffer;
             Buffer* indexBuffer;
             VertexArray* vertexArray;
@@ -30,6 +29,7 @@ namespace nickel2 {
             void setupMesh();
 
         public:
+            Material material;
             Transform* transform;
             
             Mesh(std::vector <Vertex> vertices, std::vector <uint32_t> indices, Material& material, Transform* parent = nullptr);

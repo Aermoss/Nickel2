@@ -19,7 +19,7 @@ namespace nickel2 {
     void Model::processNode(aiNode* node, const aiScene* scene) {
         for (uint32_t i = 0; i < node->mNumMeshes; i++) {
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-            meshes.push_back(processMesh(mesh, scene));
+            processMesh(mesh, scene);
         }
 
         for (uint32_t i = 0; i < node->mNumChildren; i++) {
@@ -27,7 +27,7 @@ namespace nickel2 {
         }
     }
 
-    Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
+    void Model::processMesh(aiMesh* mesh, const aiScene* scene) {
         std::vector <Vertex> vertices;
         std::vector <uint32_t> indices;
 
@@ -80,7 +80,7 @@ namespace nickel2 {
         material.ambientMap = getMaterialTexture(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_AMBIENT, 5);
         material.ambient = ambient.r, material.roughness = roughness;
         material.metallic = metallic, material.transparent = transparent;
-        return Mesh(vertices, indices, material, transform);
+        meshes[mesh->mName.C_Str()] = new Mesh(vertices, indices, material, transform);
     }
 
     Texture* Model::getMaterialTexture(aiMaterial* mat, aiTextureType type, uint32_t slot) {
@@ -93,17 +93,12 @@ namespace nickel2 {
             std::string filePathRaw = str.C_Str();
             filePath += filePathRaw.substr(filePathRaw.find_last_of("/\\") + 1);
             // filePath = filePath.substr(0, filePath.find_last_of('.')) + ".png";
-            bool found = false;
 
-            for (uint32_t i = 0; i < loadedTextures.size(); i++) {
-                if (strcmp(loadedTextures[i]->getFilePath().c_str(), filePath.c_str()) == 0) {
-                    texture = loadedTextures[i];
-                    found = true;
-                    break;
-                }
-            } if (!found) {
+            if (loadedTextures.find(filePath) != loadedTextures.end()) {
+                texture = loadedTextures[filePath];
+            } else {
                 texture = new Texture(filePath.c_str(), slot);
-                loadedTextures.push_back(texture);
+                loadedTextures[filePath] = texture;
             }
         } return texture;
     }
@@ -117,11 +112,23 @@ namespace nickel2 {
 
     }
 
+    std::unordered_map <std::string, Mesh*>& Model::getMeshes() {
+        return meshes;
+    }
+
+    std::unordered_map <std::string, Texture*>& Model::getTextures() {
+        return loadedTextures;
+    }
+
+    const std::string& Model::getDirectory() {
+        return directory;
+    }
+
     void Model::render(Shader* shader, bool useTexture) {
         transform->updateWorldMatrix(false);
 
-        for (uint32_t i = 0; i < meshes.size(); i++) {
-            meshes[i].render(shader, useTexture);
+        for (const auto &[key, value]: meshes) {
+            meshes[key]->render(shader, useTexture);
         }
     }
 
@@ -129,17 +136,14 @@ namespace nickel2 {
         transform->destroy();
         delete transform;
 
-        for (uint32_t i = 0; i < loadedTextures.size(); i++) {
-            loadedTextures[i]->destroy();
-            delete loadedTextures[i];
-        }
+        for (const auto &[key, value]: loadedTextures) {
+            loadedTextures[key]->destroy();
+            delete loadedTextures[key];
+        } loadedTextures.clear();
 
-        loadedTextures.clear();
-
-        for (uint32_t i = 0; i < meshes.size(); i++) {
-            meshes[i].destroy();
-        }
-
-        meshes.clear();
+        for (const auto &[key, value]: meshes) {
+            meshes[key]->destroy();
+            delete meshes[key];
+        } meshes.clear();
     }
 }

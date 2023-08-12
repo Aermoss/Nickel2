@@ -16,6 +16,7 @@
 #include "camera.hpp"
 #include "model.hpp"
 #include "utils.hpp"
+#include "scene.hpp"
 #include "light.hpp"
 
 namespace nickel2 {
@@ -34,15 +35,14 @@ namespace nickel2 {
         private:
             Window* window;
             std::vector <Model*> queue;
+            float logoTransparency, backgroundTransparency;
             uint32_t envCubemap, brdfLUTTexture, captureFBO, depthMapFBO, \
                 captureRBO, depthCubemap, irradianceMap, prefilterMap;
             Texture *logoTexture, *hdrTexture;
-            float logoTransparency, backgroundTransparency;
+            bool useHDRTexture, intro;
 
         public:
-            bool useHDRTexture, intro;
             glm::vec2 depthMapSize;
-            std::vector <Light> lights;
             Shader *shader, *basicShader, *depthShader, *equirectangularToCubemapShader, \
                 *irradianceShader, *prefilterShader, *brdfShader, *backgroundShader;
 
@@ -54,9 +54,9 @@ namespace nickel2 {
             void reloadShaders();
             void bindTextures();
             void renderBackground();
-            void updateLights();
+            void updateLights(std::vector <Light>& lights);
             void submit(Model* model);
-            void render(Camera* camera);
+            void render(Camera* camera, Scene* scene);
             void destroy();
     };
 }

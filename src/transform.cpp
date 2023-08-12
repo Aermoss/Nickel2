@@ -25,7 +25,7 @@ namespace nickel2 {
     }
 
     void Transform::setRotation(const glm::vec3& rotation) {
-        this->rotation = glm::quat(rotation);
+        this->rotation = glm::quat(glm::radians(rotation));
         dirtyDOF = true;
     }
 
