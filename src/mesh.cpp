@@ -24,10 +24,8 @@ namespace nickel2 {
 
         transform = new Transform();
 
-        if (parent != nullptr) {
-            transform->parent = parent;
-            parent->children.push_back(transform);
-        }
+        if (parent != nullptr)
+            transform->setParent(parent);
 
         setupMesh();
     }

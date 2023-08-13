@@ -1,6 +1,10 @@
 #include <iostream>
 #include <vector>
 
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <AL/alut.h>
+
 #include <nickel2/nickel2.hpp>
 
 int main() {
@@ -51,9 +55,14 @@ int main() {
     float realPitch = 0.0f, realYaw = 0.0f;
 
     nickel2::Scene* currentScene = &scene;
+    nickel2::audio::Listener listener(&camera);
+    nickel2::audio::Source source(&listener, "res/music.wav", true);
+    source.play();
 
     while (!window.shouldClose()) {
         context.pollEvents();
+        context.makeCurrent();
+        listener.update();
         window.update();
         window.clear();
 
@@ -71,11 +80,9 @@ int main() {
         double change = lastScrollY - nickel2::input::scrollY;
         lastScrollY = nickel2::input::scrollY;
 
-        fov += (float) change * 3.0f;
-        if (fov > 150.0f) fov = 150.0f;
-        if (fov < 5.0f) fov = 5.0f;
-
-        camera.fov = glm::lerp(camera.fov, fov, 0.2f);
+        fov = glm::clamp((fov += change * 5.0f), 10.0f, 110.0f);
+        camera.fov = glm::lerp(camera.fov, fov, 0.15f);
+        camera.sensitivity = camera.fov * 1.5f + 10.0f;
 
         if (window.input->getKey(NICKEL2_KEY_X)) {
             currentScene = &scene;

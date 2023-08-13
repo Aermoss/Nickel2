@@ -9,6 +9,12 @@ namespace nickel2 {
         } return context;
     }
 
+    uint32_t Context::genUniqueWindowID() {
+        uint32_t id = 0;
+        while (windows.find(id) != windows.end()) id++;
+        return id;
+    }
+
     Context::Context(uint32_t logLevel) {
         running = false;
         logger = new Logger();
@@ -35,24 +41,38 @@ namespace nickel2 {
             "               > size: " + std::to_string(displaySize.x) + " x " + std::to_string(displaySize.y) + "\n" + \
             "               > refresh rate: " + std::to_string(displayRefreshRate)).c_str()
         );
+
+        if (!alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT"))
+            context->logger->log(NICKEL2_ERROR, "alc enumeration extension not available.");
+
+        const char* defaultDeviceName = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
+        ALCdevice* device = alcOpenDevice(defaultDeviceName);
+
+        if (!device)
+            context->logger->log(NICKEL2_ERROR, "unable to open default device.");
+
+        context->logger->log(NICKEL2_INFO, ("found audio device: " + std::string(alcGetString(device, ALC_DEVICE_SPECIFIER)) + ".").c_str());
+        alcContext = alcCreateContext(device, NULL);
+
+        if (!alcMakeContextCurrent(alcContext)) {
+            context->logger->log(NICKEL2_ERROR, "failed to make alc context current.");
+        }
     }
 
     Context::~Context() {
 
     }
 
-    uint32_t Context::getUniqueWindowID() {
-        uint32_t id = 0;
-        while (windows.find(id) != windows.end()) id++;
+    uint32_t Context::registerWindow(Window* window) {
+        uint32_t id = genUniqueWindowID();
+        windows[id] = window;
+        logger->log(NICKEL2_INFO, ("window named \"" + windows[id]->getTitle() + "\" was registered with id: " + std::to_string(id) + ".").c_str());
         return id;
     }
 
-    uint32_t Context::registerWindow(Window* window) {
-        uint32_t id = getUniqueWindowID();
-        windows[id] = window;
-        // a window named "Moss Editor" has been registered with id 1.
-        logger->log(NICKEL2_INFO, ("window named \"" + windows[id]->getTitle() + "\" was registered with id: " + std::to_string(id) + ".").c_str());
-        return id;
+    void Context::makeCurrent() {
+        alcMakeContextCurrent(alcContext);
+        context = this;
     }
 
     void Context::pollEvents() {
@@ -67,12 +87,21 @@ namespace nickel2 {
     void Context::destroy() {
         destroyRenderer();
 
+        ALCdevice* device = alcGetContextsDevice(alcContext);
+        alcMakeContextCurrent(NULL);
+        alcDestroyContext(alcContext);
+        alcCloseDevice(device);
+
+        logger->log(NICKEL2_INFO, "alc context successfully destroyed.");
+
         if (windows.size() != 0) {
             logger->log(NICKEL2_WARNING, "there are still active windows.");
         }
 
+        if (context == this)
+            context = nullptr;
+
         logger->log(NICKEL2_INFO, "context successfully destroyed.");
-        context = nullptr;
         logger->destroy();
         delete logger;
         glfwTerminate();

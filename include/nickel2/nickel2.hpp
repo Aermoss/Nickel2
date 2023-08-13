@@ -30,3 +30,6 @@
 #include "renderer.hpp"
 #include "scene.hpp"
 #include "utils.hpp"
+
+#include "audio/listener.hpp"
+#include "audio/source.hpp"

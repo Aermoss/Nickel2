@@ -14,5 +14,8 @@
 #include "../scene.cpp"
 #include "../utils.cpp"
 
+#include "../audio/listener.cpp"
+#include "../audio/source.cpp"
+
 #include "../vendor/glad/glad.c"
 #include "../vendor/stb/stb.cpp"

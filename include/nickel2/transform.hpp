@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <unordered_map>
 
 #include <glm/glm.hpp>
 #include <glm/matrix.hpp>
@@ -16,17 +16,24 @@
 namespace nickel2 {
     class Transform {
         private:
+            uint32_t id;
             glm::mat4 matrix;
             glm::vec3 position, _scale;
             glm::quat rotation;
             bool dirtyMatrix, dirtyDOF;
+
+            uint32_t getUniqueChildID();
         
         public:
             Transform* parent;
-            std::vector <Transform*> children;
+            std::unordered_map <uint32_t, Transform*> children;
 
             Transform();
             ~Transform();
+
+            void setParent(Transform* parent);
+            uint32_t addChild(Transform* child);
+            void removeChild(uint32_t id);
 
             void setPosition(const glm::vec3& position);
             void setScale(const glm::vec3& scale);

@@ -1,6 +1,12 @@
 #include <nickel2/transform.hpp>
 
 namespace nickel2 {
+    uint32_t Transform::getUniqueChildID() {
+        uint32_t id = 0;
+        while (children.find(id) != children.end()) id++;
+        return id;
+    }
+
     Transform::Transform() {
         matrix = glm::mat4(1.0f);
         position = glm::vec3(0.0f);
@@ -12,6 +18,29 @@ namespace nickel2 {
 
     Transform::~Transform() {
 
+    }
+
+    void Transform::setParent(Transform* parent) {
+        if (parent != nullptr) {
+            id = parent->addChild(this);
+        } else {
+            if (this->parent != nullptr)
+                this->parent->removeChild(id);
+        }
+    }
+
+    uint32_t Transform::addChild(Transform* child) {
+        uint32_t id = getUniqueChildID();
+        child->parent = this;
+        children[id] = child;
+        return id;
+    }
+
+    void Transform::removeChild(uint32_t id) {
+        if (children[id]->parent == this)
+            children[id]->parent = nullptr;
+        
+        children.erase(id);
     }
 
     void Transform::setPosition(const glm::vec3& position) {
@@ -87,8 +116,8 @@ namespace nickel2 {
             else matrix = getLocalMatrix();
         }
 
-        for (Transform* child : children)
-            child->updateWorldMatrix(dirty || dirtyMatrix);
+        for (const auto& [key, value] : children)
+            value->updateWorldMatrix(dirty || dirtyMatrix);
 
         dirtyDOF = dirtyMatrix = false;
     }
