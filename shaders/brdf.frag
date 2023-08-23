@@ -1,5 +1,6 @@
 #version 460
 
+out vec4 fragColor;
 in vec2 fragTexCoords;
 
 const float PI = 3.14159265359f;
@@ -81,5 +82,5 @@ vec2 integrateBRDF(float NdotV, float roughness) {
 
 void main() {
     vec2 integratedBRDF = integrateBRDF(fragTexCoords.x, fragTexCoords.y);
-    gl_FragColor = vec4(integratedBRDF, 0.0f, 0.0f);
+    fragColor = vec4(integratedBRDF, 0.0f, 0.0f);
 }

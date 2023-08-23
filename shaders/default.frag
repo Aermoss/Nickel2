@@ -1,5 +1,7 @@
 #version 460
 
+out vec4 fragColor;
+
 in DATA {
     vec3 position;
     vec2 texCoord;
@@ -152,6 +154,24 @@ void main() {
     F0 = mix(F0, vec3(albedo), metallic);
     vec3 Lo = vec3(0.0f);
 
+    {
+        vec3 L = -vec3(-0.5f, -0.5f, -0.5f);
+        vec3 H = normalize(V + L);
+        vec3 radiance = vec3(1.0f) * 3.0f;
+        float NDF = distributionGGX(N, H, roughness);
+        float G = geometrySmith(N, V, L, roughness);
+        vec3 F = fresnelSchlick(max(dot(H, V), 0.0f), F0);
+        vec3 numerator = NDF * G * F;
+        float denominator = 4.0f * max(dot(N, V), 0.0f) * max(dot(N, L), 0.0f) + 0.0001f;
+        vec3 specular = numerator / denominator;
+        vec3 kS = F;
+        vec3 kD = vec3(1.0f) - kS;
+        kD *= 1.0f - metallic;
+        float NdotL = max(dot(N, L), 0.0f);
+        // Lo += (kD * vec3(albedo) / PI + specular) * radiance * NdotL;
+        Lo += (kD * vec3(albedo) + specular) * radiance * NdotL;
+    }
+
     for (int i = 0; i < lightCount; ++i) {
         vec3 L = normalize(lightPositions[i] - data.position);
         vec3 H = normalize(V + L);
@@ -192,5 +212,5 @@ void main() {
     vec3 color = ambient + Lo;
     color = color / (color + vec3(1.0f));
     color = pow(color, vec3(1.0f / 2.2f)); 
-    gl_FragColor = vec4(color, 1.0f);
+    fragColor = vec4(color, 1.0f);
 }

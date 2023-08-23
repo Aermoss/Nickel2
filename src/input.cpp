@@ -10,7 +10,7 @@ namespace nickel2 {
         }
     }
 
-    InputHandler::InputHandler(GLFWwindow* window) : window(window), scrollX(scrollX), scrollY(scrollY) {
+    InputHandler::InputHandler(GLFWwindow* window) : window(window), scrollX(input::scrollX), scrollY(input::scrollY) {
         glfwSetScrollCallback(window, input::scrollCallback);
     }
 

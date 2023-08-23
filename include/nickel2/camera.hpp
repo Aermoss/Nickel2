@@ -18,7 +18,7 @@ namespace nickel2 {
             Window* window;
 
         public:
-            float pitch, yaw, roll, near, far, fov;
+            float pitch, yaw, roll, fov, near, far;
             Transform* transform;
             glm::vec3 front, up;
             bool overrideMatrix;

@@ -13,7 +13,7 @@ namespace nickel2 {
         std::string name;
         if (type == GL_VERTEX_SHADER) name = "vertex";
         if (type == GL_FRAGMENT_SHADER) name = "fragment";
-        if (type == GL_GEOMETRY_SHADER) name = "geometry";
+        if (type == GL_GEOMETRY_SHADER) name = "physx/geometry";
 
         if (!status) {
             int32_t length;

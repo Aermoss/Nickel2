@@ -145,7 +145,7 @@ namespace nickel2 {
     class InputHandler {
         private:
             GLFWwindow* window;
-            double& scrollX, scrollY;
+            double &scrollX, &scrollY;
 
         public:
             InputHandler(GLFWwindow* window);

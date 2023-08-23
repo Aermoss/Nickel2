@@ -1,5 +1,6 @@
 #version 460
 
+out vec4 fragColor;
 in vec3 fragPosition;
 
 uniform samplerCube environmentMap;
@@ -79,5 +80,5 @@ void main() {
     }
 
     prefilteredColor = prefilteredColor / totalWeight;
-    gl_FragColor = vec4(prefilteredColor, 1.0f);
+    fragColor = vec4(prefilteredColor, 1.0f);
 }

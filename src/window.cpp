@@ -6,14 +6,13 @@ namespace nickel2 {
     }
 
     Window::Window(int32_t width, int32_t height, const char* title, const Color& backgroundColor, bool vsync, bool fullscreen, bool icon)
-        : width(width), height(height), title(title), backgroundColor(backgroundColor) {
+        : title(title), width(width), height(height), backgroundColor(backgroundColor) {
         Context* context = getContext();
         id = context->registerWindow(this);
         glfwWindowHint(GLFW_SAMPLES, 1);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
         glfwSetErrorCallback(glfwErrorCallback);
         window = glfwCreateWindow(width, height, title, fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
         if (window) { context->logger->log(NICKEL2_INFO, ("window named \"" + std::string(title) + "\" was created successfully, id: " + std::to_string(id) + ".").c_str());}

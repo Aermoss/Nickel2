@@ -1,5 +1,7 @@
 #version 460
 
+out vec4 fragColor;
+
 in DATA {
     vec3 position;
     vec2 texCoord;
@@ -28,5 +30,5 @@ void main() {
     if (isTransparent == 1)
         albedo.a = transparency;
 
-    gl_FragColor = albedo;
+    fragColor = albedo;
 }

@@ -32,7 +32,7 @@
 #ifndef POLY2TRI_H
 #define POLY2TRI_H
 
-#include "common/shapes.h"
+#include "physx/common/shapes.h"
 #include "sweep/cdt.h"
 
 #endif

@@ -24,8 +24,8 @@ namespace nickel2 {
     
     class Texture {
         private:
-            uint32_t id, slot;
             std::string filePath;
+            uint32_t id, slot;
 
         public:
             Texture(std::string filePath, uint32_t slot, TextureConfig config = \

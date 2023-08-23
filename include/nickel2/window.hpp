@@ -24,9 +24,9 @@ namespace nickel2 {
 
         public:
             InputHandler* input;
+            int32_t width, height;
             Color backgroundColor;
             float deltaTime, currentTime, lastTime;
-            int32_t height, width;
             
             Window(int32_t width, int32_t height, const char* title, const Color& backgroundColor = {0.0f, 0.0f, 0.0f, 255.0f}, bool vsync = false, bool fullscreen = false, bool icon = true);
             ~Window();

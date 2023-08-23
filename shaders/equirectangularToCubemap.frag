@@ -1,5 +1,6 @@
 #version 460
 
+out vec4 fragColor;
 in vec3 fragPosition;
 
 uniform sampler2D equirectangularMap;
@@ -16,5 +17,5 @@ vec2 SampleSphericalMap(vec3 v) {
 void main() {
     vec2 uv = SampleSphericalMap(normalize(fragPosition));
     vec3 color = texture(equirectangularMap, uv).rgb;
-    gl_FragColor = vec4(color, 1.0);
+    fragColor = vec4(color, 1.0);
 }

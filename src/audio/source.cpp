@@ -2,7 +2,7 @@
 
 namespace nickel2::audio {
     Source::Source(Listener* listener, const char* filePath, bool looping, float pitch, float gain)
-        : listener(listener), looping(looping), pitch(pitch), gain(gain) {
+        : listener(listener), pitch(pitch), gain(gain), looping(looping) {
         void* data;
         int32_t format, size, freq;
         alutLoadWAVFile((ALbyte*) filePath, &format, &data, &size, &freq, nullptr);

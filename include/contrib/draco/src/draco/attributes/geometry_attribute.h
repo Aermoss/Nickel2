@@ -323,14 +323,14 @@ class GeometryAttribute {
     // Convert all components available in both the original and output formats.
     for (int i = 0; i < num_components_; ++i) {
       if (!IsAddressValid(address)) {
-        return ErrorStatus("GeometryAttribute: Invalid address.");
+        return ErrorStatus("physx/geometryAttribute: Invalid address.");
       }
       OutT *const out_value = reinterpret_cast<OutT *>(address);
       if (i < input_num_components) {
         if (!ConvertComponentValue<T, OutT>(*(value + i), normalized_,
                                             out_value)) {
           return ErrorStatus(
-              "GeometryAttribute: Failed to convert component value.");
+              "physx/geometryAttribute: Failed to convert component value.");
         }
       } else {
         *out_value = static_cast<OutT>(0);
@@ -491,7 +491,7 @@ Status GeometryAttribute::ConvertAndSetAttributeValue(AttributeValueIndex avi,
       break;
   }
   return ErrorStatus(
-      "GeometryAttribute::SetAndConvertAttributeValue: Unsupported "
+      "physx/geometryAttribute::SetAndConvertAttributeValue: Unsupported "
       "attribute type.");
 }
 #endif

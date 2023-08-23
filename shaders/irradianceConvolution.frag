@@ -1,6 +1,8 @@
 #version 460
 
+out vec4 fragColor;
 in vec3 fragPosition;
+
 uniform samplerCube environmentMap;
 
 const float PI = 3.14159265359f;
@@ -25,5 +27,5 @@ void main() {
     }
 
     irradiance = PI * irradiance * (1.0f / float(nrSamples));
-    gl_FragColor = vec4(irradiance, 1.0f);
+    fragColor = vec4(irradiance, 1.0f);
 }
