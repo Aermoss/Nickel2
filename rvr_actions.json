@@ -1,0 +1,164 @@
+{
+      "default_bindings": [
+          {
+            "controller_type" : "generic",
+            "binding_url" : "rvr_bindings_generic.json"
+          }
+      ], 
+  "actions": [
+    {
+      "name": "/actions/rvr/in/left_trigger_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/left_trigger_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/left_trigger_pull",
+      "type": "vector1"
+    },
+    {
+      "name": "/actions/rvr/in/right_trigger_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/right_trigger_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/right_trigger_pull",
+      "type": "vector1"
+    },
+    {
+      "name": "/actions/rvr/in/left_grip_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/left_grip_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/left_grip_pull",
+      "type": "vector1"
+    },
+    {
+      "name": "/actions/rvr/in/right_grip_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/right_grip_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/right_grip_pull",
+      "type": "vector1"
+    },
+    {
+      "name": "/actions/rvr/in/right_joystick_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/right_joystick_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/right_joystick_position",
+      "type": "vector2"
+    },
+    {
+      "name": "/actions/rvr/in/left_joystick_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/left_joystick_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/left_joystick_position",
+      "type": "vector2"
+    },
+    {
+      "name": "/actions/rvr/in/a_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/a_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/b_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/b_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/x_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/x_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/y_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/y_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/rvr/in/hand_right",
+      "type": "pose"
+    },
+    {
+      "name": "/actions/rvr/in/hand_left",
+      "type": "pose"
+    },
+    {
+      "name": "/actions/rvr/out/haptic_right",
+      "type": "vibration"
+    },
+    {
+      "name": "/actions/rvr/out/haptic_left",
+      "type": "vibration"
+    }
+  ],
+    "localization" : [
+        {
+            "language_tag": "en_US",
+            "/actions/rvr/in/a_click" : "A Click",
+            "/actions/rvr/in/a_touch" : "A Touch",
+            "/actions/rvr/in/b_click" : "B Click",
+            "/actions/rvr/in/b_touch" : "B Touch",
+            "/actions/rvr/in/x_click" : "X Click",
+            "/actions/rvr/in/x_touch" : "X Touch",
+            "/actions/rvr/in/y_click" : "Y Click",
+            "/actions/rvr/in/y_touch" : "Y Touch",
+            "/actions/rvr/in/right_grip_click" : "Right Grip Click",
+            "/actions/rvr/in/right_grip_touch" : "Right Grip Touch",
+            "/actions/rvr/in/left_grip_pull" : "Left Grip Pull",
+            "/actions/rvr/in/left_grip_click" : "Left Grip Click",
+            "/actions/rvr/in/left_grip_touch" : "Left Grip Touch",
+            "/actions/rvr/in/right_trigger_pull" : "Right Trigger Pull",
+            "/actions/rvr/in/right_trigger_click" : "Right Trigger Click",
+            "/actions/rvr/in/right_trigger_touch" : "Right Trigger Touch",
+            "/actions/rvr/in/left_trigger_pull" : "Left Trigger Pull",
+            "/actions/rvr/in/left_trigger_click" : "Left Trigger Click",
+            "/actions/rvr/in/left_trigger_touch" : "Left Trigger Touch",
+            "/actions/rvr/in/right_joystick_position" : "Right Joystick Position",
+            "/actions/rvr/in/right_joystick_click" : "Right Joystick Click",
+            "/actions/rvr/in/right_joystick_touch" : "Right Joystick Touch",
+            "/actions/rvr/in/left_joystick_position" : "Left Joystick Position",
+            "/actions/rvr/in/left_joystick_click" : "Left Joystick Click",
+            "/actions/rvr/in/left_joystick_touch" : "Left Joystick Touch",
+            "/actions/rvr/in/hand_right" : "Right Hand Pose",
+            "/actions/rvr/in/hand_left" : "Left Hand Pose",
+            "/actions/rvr/out/haptic_right" : "Right Haptic Feedback",
+            "/actions/rvr/out/haptic_left" : "Left Haptic Feedback"
+        }
+    ]
+}

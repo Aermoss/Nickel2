@@ -8,6 +8,7 @@
 #include <glm/matrix.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <stb/stb_image.h>
+#include <rvr/rvr.hpp>
 
 #include "vertexArray.hpp"
 #include "buffer.hpp"
@@ -36,8 +37,8 @@ namespace nickel2 {
             Window* window;
             std::vector <Model*> queue;
             float logoTransparency, backgroundTransparency;
-            uint32_t envCubemap, brdfLUTTexture, captureFBO, depthMapFBO, \
-                captureRBO, depthCubemap, irradianceMap, prefilterMap;
+            uint32_t envCubemap, brdfLUTTexture, captureFBO, captureRBO, \
+                irradianceMap, prefilterMap, depthMapFBO, depthCubemap;
             Texture *logoTexture, *hdrTexture;
             bool useHDRTexture, intro;
 
@@ -55,8 +56,10 @@ namespace nickel2 {
             void bindTextures();
             void renderBackground();
             void updateLights(std::vector <Light>& lights);
+            void updateShadowMap(std::vector <Light>& lights);
+            void updateShadowMap(Scene* scene);
             void submit(Model* model);
-            void render(Camera* camera, Scene* scene);
+            void render(Camera* camera, Scene* scene, bool updateShadowMap = true, bool updateCamera = true);
             void destroy();
     };
 }

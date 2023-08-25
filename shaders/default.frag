@@ -123,7 +123,7 @@ float shadowCalculation(int lightIndex) {
 
 void main() {
     vec4 albedo = vec4(albedoDefault, 1.0f);
-    float metallic = metallicDefault;
+    float metallic = 0.0f;
     float roughness = roughnessDefault;
     float ao = ambientDefault;
 
@@ -189,9 +189,9 @@ void main() {
         kD *= 1.0f - metallic;
         float NdotL = max(dot(N, L), 0.0f);
         float shadow = shadowCalculation(i);
-        Lo += (kD * vec3(albedo) / PI + specular) * (1.0f - shadow) * radiance * NdotL;
+        Lo += (kD * vec3(albedo) / PI + specular) * (1.0f - shadow * 2) * radiance * NdotL;
     }
-     
+
     vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0f), F0, roughness);
     vec3 kS = F;
     vec3 kD = 1.0f - kS;

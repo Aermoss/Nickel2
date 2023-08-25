@@ -475,7 +475,50 @@ namespace nickel2 {
 
         shader->unuse();
     }
-    
+
+    void Renderer::updateShadowMap(std::vector <Light>& lights) {
+        if (lights.size() != 0) {
+            glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), depthMapSize.x / depthMapSize.y, 0.1f, 1000.0f);
+            glm::vec3 position = lights[0].position;
+
+            std::vector <glm::mat4> shadowTransforms {
+                shadowProj * glm::lookAt(position, position + glm::vec3( 1.0,  0.0,  0.0), glm::vec3(0.0, -1.0,  0.0)),
+                shadowProj * glm::lookAt(position, position + glm::vec3(-1.0,  0.0,  0.0), glm::vec3(0.0, -1.0,  0.0)),
+                shadowProj * glm::lookAt(position, position + glm::vec3( 0.0,  1.0,  0.0), glm::vec3(0.0,  0.0,  1.0)),
+                shadowProj * glm::lookAt(position, position + glm::vec3( 0.0, -1.0,  0.0), glm::vec3(0.0,  0.0, -1.0)),
+                shadowProj * glm::lookAt(position, position + glm::vec3( 0.0,  0.0,  1.0), glm::vec3(0.0, -1.0,  0.0)),
+                shadowProj * glm::lookAt(position, position + glm::vec3( 0.0,  0.0, -1.0), glm::vec3(0.0, -1.0,  0.0))
+            };
+
+            glViewport(0, 0, depthMapSize.x, depthMapSize.y);
+            glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+            glClear(GL_DEPTH_BUFFER_BIT);
+            depthShader->use();
+
+            for (uint32_t i = 0; i < 6; i++)
+                depthShader->setUniformMatrix4fv(("shadowMatrices[" + std::to_string(i) + "]").c_str(), glm::value_ptr(shadowTransforms[i]));
+
+            depthShader->setUniform3fv("lightPosition", glm::value_ptr(position));
+
+            for (uint32_t i = 0; i < queue.size(); i++) {
+                queue[i]->render(depthShader, false);
+            }
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            int32_t width, height;
+            window->getSize(&width, &height);
+            glViewport(0, 0, width, height);
+        }
+    }
+
+    void Renderer::updateShadowMap(Scene* scene) {
+        for (Model* object : scene->getObjects())
+            this->submit(object);
+
+        updateShadowMap(scene->getLights());
+        queue.clear();
+    }
+
     Renderer::Renderer(Window* window, const std::string& hdrTexturePath, glm::ivec2 depthMapSize) : window(window), depthMapSize(depthMapSize) {
         shader = new Shader(readFile("shaders/default.vert"), readFile("shaders/default.frag"));
         basicShader = new Shader(readFile("shaders/default.vert"), readFile("shaders/basic.frag"));
@@ -535,16 +578,13 @@ namespace nickel2 {
         queue.push_back(model);
     }
 
-    void Renderer::render(Camera* camera, Scene* scene) {
+    void Renderer::render(Camera* camera, Scene* scene, bool updateShadowMap, bool updateCamera) {
         std::vector <Light> lights = scene->getLights();
-
-        for (Model* object : scene->getObjects()) {
-            queue.push_back(object);
-        }
-
         updateLights(lights);
-        camera->updateMatrices(shader);
-        camera->updateMatrices(basicShader);
+        bindTextures();
+
+        for (Model* object : scene->getObjects())
+            this->submit(object);
 
         shader->use();
         shader->setUniform1i("enableIBL", useHDRTexture ? 1 : 0);
@@ -554,48 +594,24 @@ namespace nickel2 {
         shader->setUniform1i("prefilterMap", 8);
         shader->setUniform1i("brdfLUT", 9);
         shader->unuse();
+        
+        if (updateShadowMap)
+            this->updateShadowMap(lights);
 
-        if (lights.size() != 0) {
-            glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), depthMapSize.x / depthMapSize.y, 0.1f, 1000.0f);
-            glm::vec3 position = lights[0].position;
-
-            std::vector <glm::mat4> shadowTransforms {
-                shadowProj * glm::lookAt(position, position + glm::vec3( 1.0,  0.0,  0.0), glm::vec3(0.0, -1.0,  0.0)),
-                shadowProj * glm::lookAt(position, position + glm::vec3(-1.0,  0.0,  0.0), glm::vec3(0.0, -1.0,  0.0)),
-                shadowProj * glm::lookAt(position, position + glm::vec3( 0.0,  1.0,  0.0), glm::vec3(0.0,  0.0,  1.0)),
-                shadowProj * glm::lookAt(position, position + glm::vec3( 0.0, -1.0,  0.0), glm::vec3(0.0,  0.0, -1.0)),
-                shadowProj * glm::lookAt(position, position + glm::vec3( 0.0,  0.0,  1.0), glm::vec3(0.0, -1.0,  0.0)),
-                shadowProj * glm::lookAt(position, position + glm::vec3( 0.0,  0.0, -1.0), glm::vec3(0.0, -1.0,  0.0))
-            };
-
-            glViewport(0, 0, depthMapSize.x, depthMapSize.y);
-            glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-            glClear(GL_DEPTH_BUFFER_BIT);
-            depthShader->use();
-
-            for (uint32_t i = 0; i < 6; i++)
-                depthShader->setUniformMatrix4fv(("shadowMatrices[" + std::to_string(i) + "]").c_str(), glm::value_ptr(shadowTransforms[i]));
-
-            depthShader->setUniform3fv("lightPosition", glm::value_ptr(position));
-
-            for (uint32_t i = 0; i < queue.size(); i++) {
-                queue[i]->render(depthShader, false);
-            }
-
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            int32_t width, height;
-            window->getSize(&width, &height);
-            glViewport(0, 0, width, height);
+        if (updateCamera) {
+            camera->updateMatrices(shader);
+            camera->updateMatrices(basicShader);
         }
 
         if (useHDRTexture) {
-            camera->updateMatrices(backgroundShader);
+            if (updateCamera)
+                camera->updateMatrices(backgroundShader);
+
             renderBackground();
         }
 
-        for (uint32_t i = 0; i < queue.size(); i++) {
+        for (uint32_t i = 0; i < queue.size(); i++)
             queue[i]->render(shader);
-        }
 
         queue.clear();
 

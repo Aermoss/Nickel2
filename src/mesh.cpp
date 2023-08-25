@@ -40,7 +40,9 @@ namespace nickel2 {
         shader->setUniform3fv("albedoDefault", (float*) glm::value_ptr(material.albedo));
         shader->setUniform1f("roughnessDefault", material.roughness);
         shader->setUniform1f("metallicDefault", material.metallic);
-        shader->setUniform1f("ambientDefault", 0.5f);
+        shader->setUniform1f("ambientDefault", material.ambient);
+        shader->setUniform1i("rotateTexture", material.rotateTexture);
+        shader->setUniform1i("textureScale", material.textureScale);
         glm::mat4 matrix = transform->getWorldMatrix();
         shader->setUniformMatrix3fv("modelMatrix", (float*) glm::value_ptr(glm::transpose(glm::inverse(glm::mat3(matrix)))));
         shader->setUniformMatrix4fv("model", glm::value_ptr(matrix));

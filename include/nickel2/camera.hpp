@@ -8,6 +8,14 @@
 #include "window.hpp"
 #include "shader.hpp"
 
+#undef near
+#undef far
+
+#define NICKEL2_EULER_OVERRIDE 0b0001
+#define NICKEL2_INVERSE_MATRIX 0b0010
+#define NICKEL2_CUSTOM_PROJECTION 0b0100
+#define NICKEL2_HMD_POSITION 0b1000
+
 namespace nickel2 {
     class Transform;
     class Window;
@@ -21,9 +29,10 @@ namespace nickel2 {
             float pitch, yaw, roll, fov, near, far;
             Transform* transform;
             glm::vec3 front, up;
-            bool overrideMatrix;
+            glm::mat4 proj;
+            uint32_t flags;
 
-            Camera(Window* window, float fov = 90.0f, float near = 0.01f, float far = 1000.0f, bool overrideMatrix = true);
+            Camera(Window* window, float fov = 90.0f, float near = 0.01f, float far = 1000.0f, uint32_t flags = NICKEL2_EULER_OVERRIDE);
             ~Camera();
 
             void updateMatrices(Shader* shader);
@@ -42,5 +51,16 @@ namespace nickel2 {
             ~FirstPersonCamera();
 
             void processInputs();
+    };
+
+    class VirutalRealityCamera : public Camera {
+        private:
+            Window* window;
+
+        public:
+            VirutalRealityCamera(Window* window, float near = 0.01f, float far = 1000.0f);
+            ~VirutalRealityCamera();
+
+            void prepareForRendering(rvr::RVREye eye);
     };
 }

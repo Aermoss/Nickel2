@@ -69,7 +69,7 @@ namespace nickel2 {
         }
 
         Material material;
-        material.name = name.C_Str();
+        material.name = std::string(name.C_Str());
         material.shadingMode = shadingMode;
         material.albedo = glm::vec4(albedo.r, albedo.g, albedo.b, albedo.a);
         material.albedoMap = getMaterialTexture(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_DIFFUSE, 0);
@@ -80,7 +80,12 @@ namespace nickel2 {
         material.ambientMap = getMaterialTexture(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_AMBIENT, 5);
         material.ambient = ambient.r, material.roughness = roughness;
         material.metallic = metallic, material.transparent = transparent;
-        meshes[mesh->mName.C_Str()] = new Mesh(vertices, indices, material, transform);
+        material.rotateTexture = false;
+        material.textureScale = 1;
+
+        uint32_t id = 0;
+        while (meshes.find((std::to_string(id) + "_" + mesh->mName.C_Str()).c_str()) != meshes.end()) id++;
+        meshes[(std::to_string(id) + "_" + mesh->mName.C_Str()).c_str()] = new Mesh(vertices, indices, material, transform);
     }
 
     Texture* Model::getMaterialTexture(aiMaterial* mat, aiTextureType type, uint32_t slot) {

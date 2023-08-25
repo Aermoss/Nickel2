@@ -1,8 +1,8 @@
 #include <nickel2/camera.hpp>
 
 namespace nickel2 {
-    Camera::Camera(Window* window, float fov, float near, float far, bool overrideMatrix)
-        : window(window), fov(fov), near(near), far(far), overrideMatrix(overrideMatrix) {
+    Camera::Camera(Window* window, float fov, float near, float far, uint32_t flags)
+        : window(window), fov(fov), near(near), far(far), flags(flags) {
         pitch = 0.0f, yaw = 0.0f, roll = 0.0f;
         transform = new Transform();
         front = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -14,13 +14,18 @@ namespace nickel2 {
     }
 
     void Camera::updateMatrices(Shader* shader) {
-        int32_t width, height;
-        window->getSize(&width, &height);
+        if ((flags & NICKEL2_CUSTOM_PROJECTION) == 0) {
+            int32_t width, height;
+            window->getSize(&width, &height);
+            proj = glm::perspective(glm::radians(fov), (float) width / (float) height, near, far);
+        }
 
-        glm::mat4 proj = glm::perspective(glm::radians(fov), (float) width / (float) height, near, far);
         glm::vec3 position = transform->getPosition();
 
-        if (overrideMatrix) {
+        if ((flags & NICKEL2_HMD_POSITION) != 0)
+            position += rvr::RVRGetHmdPosition();
+
+        if ((flags & NICKEL2_EULER_OVERRIDE) != 0) {
             front = glm::normalize(glm::vec3(
                 cos(glm::radians(yaw)) * cos(glm::radians(pitch)),
                 sin(glm::radians(pitch)),
@@ -32,7 +37,9 @@ namespace nickel2 {
 
         transform->updateWorldMatrix();
         glm::mat4 view = transform->getWorldMatrix();
-        if (!overrideMatrix) view = glm::inverse(view);
+
+        if ((flags & NICKEL2_INVERSE_MATRIX) != 0)
+            view = glm::inverse(view);
 
         shader->use();
         shader->setUniform3fv("cameraPosition", glm::value_ptr(position));
@@ -51,7 +58,7 @@ namespace nickel2 {
     }
 
     FirstPersonCamera::FirstPersonCamera(Window* window, float fov, float sensitivity, float near, float far)
-        : Camera(window, fov, near, far, true), window(window), sensitivity(sensitivity) {
+        : Camera(window, fov, near, far, NICKEL2_EULER_OVERRIDE), window(window), sensitivity(sensitivity) {
         normalSpeed = 0.1f, sprintSpeed = 0.2f;
     }
 
@@ -106,5 +113,22 @@ namespace nickel2 {
             pitch = -89.99f;
 
         window->input->setCursorPosition(width / 2, height / 2);
+    }
+
+    VirutalRealityCamera::VirutalRealityCamera(Window* window, float near, float far)
+        : Camera(window, 0.0f, near, far, NICKEL2_CUSTOM_PROJECTION | NICKEL2_HMD_POSITION), window(window) {
+
+    }
+
+    VirutalRealityCamera::~VirutalRealityCamera() {
+        
+    }
+
+    void VirutalRealityCamera::prepareForRendering(rvr::RVREye eye) {
+        proj = rvr::RVRGetCurrentViewProjectionNoPoseMatrix(eye);
+        transform->overrideMatrix(glm::translate(rvr::RVRGetHmdPoseMatrix(), transform->getPosition()));
+        glm::vec3 direction = rvr::RVRGetHmdDirection();
+        float yaw = -std::atan2(direction.x, direction.z) - glm::radians(90.0f);
+        front = glm::vec3(glm::cos(yaw), 0.0f, glm::sin(yaw));
     }
 }

@@ -1,0 +1,169 @@
+{
+   "bindings" : {
+      "/actions/rvr" : {
+         "poses" : [
+            {
+               "output" : "/actions/rvr/in/hand_left",
+               "path" : "/user/hand/left/pose/raw"
+            },
+            {
+               "output" : "/actions/rvr/in/hand_right",
+               "path" : "/user/hand/right/pose/raw"
+            }
+         ],
+         "haptics" : [
+            {
+               "output" : "/actions/rvr/out/haptic_right",
+               "path" : "/user/hand/right/output/haptic"
+            },
+            {
+               "output" : "/actions/rvr/out/haptic_left",
+               "path" : "/user/hand/left/output/haptic"
+            }
+         ],
+         "sources" : [
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/rvr/in/right_trigger_click"
+                  },
+                  "pull" : {
+                     "output" : "/actions/rvr/in/right_trigger_pull"
+                  },
+                  "touch" : {
+                     "output" : "/actions/rvr/in/right_trigger_touch"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/rvr/in/left_trigger_click"
+                  },
+                  "pull" : {
+                     "output" : "/actions/rvr/in/left_trigger_pull"
+                  },
+                  "touch" : {
+                     "output" : "/actions/rvr/in/left_trigger_touch"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/trigger"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/rvr/in/right_grip_click"
+                  },
+                  "pull" : {
+                     "output" : "/actions/rvr/in/right_grip_pull"
+                  },
+                  "touch" : {
+                     "output" : "/actions/rvr/in/right_grip_touch"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/grip"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/rvr/in/left_grip_click"
+                  },
+                  "pull" : {
+                     "output" : "/actions/rvr/in/left_grip_pull"
+                  },
+                  "touch" : {
+                     "output" : "/actions/rvr/in/left_grip_touch"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/grip"
+            },
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/rvr/in/right_joystick_position"
+                  },
+                  "click" : {
+                     "output" : "/actions/rvr/in/right_joystick_click"
+                  },
+                  "touch" : {
+                     "output" : "/actions/rvr/in/right_joystick_touch"
+                  }
+               },
+               "mode" : "joystick",
+               "path" : "/user/hand/right/input/joystick"
+            },
+            {
+               "inputs" : {
+                  "position" : {
+                     "output" : "/actions/rvr/in/left_joystick_position"
+                  },
+                  "click" : {
+                     "output" : "/actions/rvr/in/left_joystick_click"
+                  },
+                  "touch" : {
+                     "output" : "/actions/rvr/in/left_joystick_touch"
+                  }
+               },
+               "mode" : "joystick",
+               "path" : "/user/hand/left/input/joystick"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/rvr/in/a_click"
+                  },
+                  "touch" : {
+                     "output" : "/actions/rvr/in/a_touch"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/a"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/rvr/in/b_click"
+                  },
+                  "touch" : {
+                     "output" : "/actions/rvr/in/b_touch"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/b"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/rvr/in/x_click"
+                  },
+                  "touch" : {
+                     "output" : "/actions/rvr/in/x_touch"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/x"
+            },
+            {
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/rvr/in/y_click"
+                  },
+                  "touch" : {
+                     "output" : "/actions/rvr/in/y_touch"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/y"
+            }
+         ]
+      }
+   },
+   "controller_type" : "generic",
+   "description" : "Bindings for RVR for a generic controller",
+   "name" : "RVR bindings for a generic controller"
+}

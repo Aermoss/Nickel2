@@ -4,7 +4,7 @@ includeDirs := -Iinclude -Iinclude/bullet
 libDirs := -Llib -Lbin
 bullet := -lBullet2FileLoader.dll -lBullet3Collision.dll -lBullet3Common.dll -lBullet3Dynamics.dll -lBullet3Geometry.dll -lBullet3OpenCL_clew.dll -lBulletCollision.dll \
 	-lBulletDynamics.dll -lBulletExampleBrowserLib.dll -lBulletFileLoader.dll -lBulletInverseDynamics.dll -lBulletInverseDynamicsUtils.dll -lBulletSoftBody.dll -lLinearMath.dll
-libs := ${bullet} -lnickel2 -lvulkan-1 -lOpenAL32.dll -lalut.dll -lstb -lassimp -lzlibstatic -lglfw3 -lglad -lopengl32 -lgdi32 -lodbc32 -lodbccp32
+libs := ${bullet} -lnickel2 -lrvr -lopenvr_api -lvulkan-1 -lOpenAL32.dll -lalut.dll -lstb -lassimp -lzlibstatic -lglfw3 -lglad -lopengl32 -lgdi32 -lodbc32 -lodbccp32
 
 all: compile-shaders build run
 
