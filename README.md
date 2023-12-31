@@ -6,17 +6,19 @@ A game engine written in C++ using OpenGL.
 ```c++
 #include <nickel2/nickel2.hpp>
 
-int main() {
+int main(int argc, const char* argv[]) {
     nickel2::Context context;
     nickel2::Window window(1200, 600, "Nickel2", nickel2::Color(0, 0, 0), true);
-    
     nickel2::Renderer renderer(&window);
     nickel2::FirstPersonCamera camera(&window, 90.0f, 100.0f, 0.01f, 1000.0f);
+    nickel2::audio::Listener listener(&camera);
     nickel2::Scene scene;
 
     while (!window.shouldClose()) {
+        context.makeCurrent();
         context.pollEvents();
         camera.processInputs();
+        listener.update();
         window.update();
         window.clear();
         renderer.render(&camera, &scene);
@@ -24,6 +26,7 @@ int main() {
     }
 
     scene.destroy();
+    listener.destroy();
     camera.destroy();
     renderer.destroy();
     window.destroy();
