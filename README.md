@@ -15,7 +15,7 @@ int main(int argc, const char* argv[]) {
     nickel2::Scene scene;
 
     nickel2::Scene* currentScene = &scene;
-    nickel2::Camera* currenteCamera = &camera;
+    nickel2::Camera* currentCamera = &camera;
 
     while (!window.shouldClose()) {
         context.makeCurrent();
@@ -28,7 +28,7 @@ int main(int argc, const char* argv[]) {
         if (window.input->getKey(NICKEL2_KEY_R))
             renderer.reloadShaders();
 
-        renderer.render(currenteCamera, currentScene);
+        renderer.render(currentCamera, currentScene);
         window.swapBuffers();
     }
 
