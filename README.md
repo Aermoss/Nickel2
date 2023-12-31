@@ -14,6 +14,9 @@ int main(int argc, const char* argv[]) {
     nickel2::audio::Listener listener(&camera);
     nickel2::Scene scene;
 
+    nickel2::Scene* currentScene = &scene;
+    nickel2::Camera* currenteCamera = &camera;
+
     while (!window.shouldClose()) {
         context.makeCurrent();
         context.pollEvents();
@@ -21,7 +24,11 @@ int main(int argc, const char* argv[]) {
         listener.update();
         window.update();
         window.clear();
-        renderer.render(&camera, &scene);
+
+        if (window.input->getKey(NICKEL2_KEY_R))
+            renderer.reloadShaders();
+
+        renderer.render(currenteCamera, currentScene);
         window.swapBuffers();
     }
 
