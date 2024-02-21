@@ -1,6 +1,9 @@
 # Nickel2
 A game engine written in C++ using OpenGL.
 
+# Work In Progress
+This project is currently under development.
+
 # Examples
 ## Creating a window
 ```c++
