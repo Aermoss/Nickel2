@@ -1,35 +1,64 @@
 #pragma once
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/matrix.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/constants.hpp>
+#include <glm/gtc/random.hpp>
+
+#include <al/al.h>
+#include <al/alc.h>
+#include <al/alut.h>
+
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <glfw/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_EXPOSE_NATIVE_WGL
+#define GLFW_NATIVE_INCLUDE_NONE
+#include <glfw/glfw3native.h>
 
-#define NICKEL2_VERSION "0.0.3"
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_opengl3.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <imguizmo/ImGuizmo.h>
 
-#define NICKEL2_TRUE 1
-#define NICKEL2_FALSE 0
+#include <assimp/importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 
-#define NICKEL2_BOOL GL_BOOL
-#define NICKEL2_FLOAT GL_FLOAT
-#define NICKEL2_INT GL_INT
-#define NICKEL2_UNSIGNED_INT GL_UNSIGNED_INT
-#define NICKEL2_UNSIGNED_BYTE GL_UNSIGNED_BYTE
+#include <stb/stb_image.h>
+#include <entt/entt.hpp>
+#include <rvr/rvr.hpp>
 
-#include "color.hpp"
-#include "vertex.hpp"
-#include "context.hpp"
-#include "model.hpp"
-#include "mesh.hpp"
-#include "window.hpp"
-#include "buffer.hpp"
-#include "vertexArray.hpp"
-#include "shader.hpp"
-#include "camera.hpp"
-#include "texture.hpp"
-#include "transform.hpp"
-#include "material.hpp"
-#include "renderer.hpp"
-#include "scene.hpp"
-#include "utils.hpp"
+#include "Audio/Listener.hpp"
+#include "Audio/Source.hpp"
 
-#include "audio/listener.hpp"
-#include "audio/source.hpp"
+#include "Core/Version.hpp"
+#include "Core/Platform.hpp"
+#include "Core/Constants.hpp"
+#include "Core/Version.hpp"
+#include "Core/Color.hpp"
+#include "Core/Utils.hpp"
+#include "Core/Logger.hpp"
+#include "Core/Context.hpp"
+#include "Core/Input.hpp"
+#include "Core/Window.hpp"
+
+#include "Renderer/Vertex.hpp"
+#include "Renderer/Mesh.hpp"
+#include "Renderer/Submesh.hpp"
+#include "Renderer/Buffer.hpp"
+#include "Renderer/VertexArray.hpp"
+#include "Renderer/Shader.hpp"
+#include "Renderer/Material.hpp"
+#include "Renderer/Renderer.hpp"
+#include "Renderer/Camera.hpp"
+#include "Renderer/Texture.hpp"
+
+#include "Scene/Component.hpp"
+#include "Scene/Transform.hpp"
+#include "Scene/Scene.hpp"
+#include "Scene/Entity.hpp"

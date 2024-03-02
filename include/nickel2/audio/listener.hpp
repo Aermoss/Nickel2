@@ -1,17 +1,25 @@
 #pragma once
 
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/alut.h>
+#include <cstdint>
+
+#include <al/al.h>
+#include <al/alc.h>
+#include <al/alut.h>
+
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
-#include <nickel2/audio/source.hpp>
-#include <nickel2/camera.hpp>
+#include "../Renderer/Camera.hpp"
 
-namespace nickel2::audio {
+#include "Source.hpp"
+
+namespace Nickel2 {
+    class Source;
+    class Camera;
+    
     class Listener {
         private:
-            std::unordered_map <uint32_t, Source*> sources;
+            std::unordered_map<uint32_t, Source*> sources;
             Camera* camera;
 
             uint32_t genUniqueSourceID();
@@ -19,7 +27,7 @@ namespace nickel2::audio {
         public:
             Transform* transform;
 
-            Listener(Camera* camera = nullptr);
+            Listener(Camera* camera, Transform* transform);
             ~Listener();
 
             uint32_t addSource(Source* source);

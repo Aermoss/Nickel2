@@ -1,15 +1,16 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
 
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/alut.h>
+#include <al/al.h>
+#include <al/alc.h>
+#include <al/alut.h>
 
-#include <nickel2/audio/listener.hpp>
-#include <nickel2/transform.hpp>
+#include "../Scene/Transform.hpp"
 
-namespace nickel2::audio {
+#include "Listener.hpp"
+
+namespace Nickel2 {
     class Listener;
 
     class Source {
@@ -22,7 +23,7 @@ namespace nickel2::audio {
         public:
             Transform* transform;
 
-            Source(Listener* listener, const char* filePath, bool looping = false, float pitch = 1.0f, float gain = 1.0f);
+            Source(Listener* listener, Transform* transform, const char* filePath, bool looping = false, float pitch = 1.0f, float gain = 1.0f);
             ~Source();
 
             void setLooping(bool looping);

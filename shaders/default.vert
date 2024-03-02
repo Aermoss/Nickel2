@@ -6,6 +6,8 @@ layout (location = 2) in vec3 normal;
 
 out DATA {
     vec3 position;
+    vec4 worldSpacePosition;
+    vec4 lightSpacePosition;
     vec2 texCoord;
     vec3 normal;
     vec3 cameraPosition;
@@ -14,10 +16,11 @@ out DATA {
     mat4 model;
 } data;
 
+uniform mat4 lightSpaceMatrix;
+uniform mat3 inverseModel;
 uniform mat4 model;
 uniform mat4 proj;
 uniform mat4 view;
-uniform mat3 modelMatrix;
 
 uniform vec3 cameraPosition;
 
@@ -27,6 +30,8 @@ uniform int inverseNormal;
 
 void main() {
     data.position = vec3(model * vec4(position, 1.0f));
+    data.worldSpacePosition = proj * view * vec4(data.position, 1.0f);
+    data.lightSpacePosition = lightSpaceMatrix * vec4(data.position, 1.0f);
     data.texCoord = texCoord;
 
     if (textureScale != 0)
@@ -36,14 +41,14 @@ void main() {
         data.texCoord = vec2(data.texCoord.y, data.texCoord.x);
 
     if (inverseNormal == 1)
-        data.normal = vec3(modelMatrix * -normal);
+        data.normal = vec3(inverseModel * -normal);
 
     else
-        data.normal = vec3(modelMatrix * normal);
+        data.normal = vec3(inverseModel * normal);
     
     data.cameraPosition = cameraPosition;
     data.proj = proj;
     data.view = view;
     data.model = model;
-    gl_Position = proj * view * vec4(data.position, 1.0f);
+    gl_Position = data.worldSpacePosition;
 }

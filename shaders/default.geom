@@ -5,6 +5,7 @@ layout (triangle_strip, max_vertices = 3) out;
 
 in DATA {
     vec3 position;
+    vec4 lightSpacePosition;
     vec2 texCoord;
     vec3 normal;
     vec3 cameraPosition;
@@ -15,9 +16,13 @@ in DATA {
 
 out DATA {
     vec3 position;
+    vec4 lightSpacePosition;
     vec2 texCoord;
     vec3 normal;
     vec3 cameraPosition;
+    mat4 proj;
+    mat4 view;
+    mat4 model;
 } data_out;
 
 void main() {

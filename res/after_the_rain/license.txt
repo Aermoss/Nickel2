@@ -1,0 +1,11 @@
+Model Information:
+* title:	After the rain... - VR & Sound
+* source:	https://sketchfab.com/3d-models/after-the-rain-vr-sound-a1177381d3464f75b10cb8f462f0b9a5
+* author:	Aurélien Martel (https://sketchfab.com/aurelien_martel)
+
+Model License:
+* license type:	CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+* requirements:	Author must be credited. No commercial use.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "After the rain... - VR & Sound" (https://sketchfab.com/3d-models/after-the-rain-vr-sound-a1177381d3464f75b10cb8f462f0b9a5) by Aurélien Martel (https://sketchfab.com/aurelien_martel) licensed under CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
