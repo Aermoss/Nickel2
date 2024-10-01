@@ -48,7 +48,7 @@ vendorObjects := $(patsubst $(sourceDir)/%.cpp,$(objectDir)/%.o,$(vendorSources)
 default: $(staticLibrary) run
 
 $(pch).gch: $(pch) $(foreach file,Platform Base Assert Utils Logger,$(patsubst %,./include/$(projectName)/Core/%.hpp,$(file)))
-	@python ./checkDir.py --path=--path="$(dir $@)"
+	@python ./checkDir.py --path="$(dir $@)"
 	$(cc) $(warnings) $< -o $@ $(addprefix -I,$(includeDir)) $(defines)
 
 $(executable): $(pchObject) $(editorObjects) $(moduleObjects) $(rendererObjects) $(vendorObjects)
