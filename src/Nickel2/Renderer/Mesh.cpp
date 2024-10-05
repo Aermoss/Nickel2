@@ -69,11 +69,11 @@ namespace Nickel2 {
                 indices.push_back(face.mIndices[j]);
         }
 
-        aiString name;
+        aiString matName;
         aiColor4D albedo, ambient;
         float transparent, metallic = 0.0f, roughness = 0.0f;
         int32_t shadingMode; {
-            aiGetMaterialString(scene->mMaterials[mesh->mMaterialIndex], AI_MATKEY_NAME, &name);
+            aiGetMaterialString(scene->mMaterials[mesh->mMaterialIndex], AI_MATKEY_NAME, &matName);
             aiGetMaterialColor(scene->mMaterials[mesh->mMaterialIndex], AI_MATKEY_COLOR_DIFFUSE, &albedo);
             aiGetMaterialColor(scene->mMaterials[mesh->mMaterialIndex], AI_MATKEY_COLOR_AMBIENT, &ambient);
             aiGetMaterialFloat(scene->mMaterials[mesh->mMaterialIndex], AI_MATKEY_TRANSMISSION_FACTOR, &transparent);
@@ -86,7 +86,7 @@ namespace Nickel2 {
         }
 
         Material material = {
-            .name = std::string(name.C_Str()), .shadingMode = shadingMode,
+            .name = std::string(matName.C_Str()), .shadingMode = shadingMode,
             .albedo = glm::vec4(albedo.r, albedo.g, albedo.b, albedo.a),
             .ambient = ambient.r, .roughness = roughness,
             .metallic = metallic, .transparent = transparent,
@@ -134,15 +134,20 @@ namespace Nickel2 {
             }
         }
 
-        std::shared_ptr<Entity> submesh = std::make_shared<Entity>(entity->GetScene(), mesh->mName.C_Str());
+        std::string name = mesh->mName.C_Str();
+
+        if (submeshes.find(name) != submeshes.end())
+            name += "_" + std::to_string(submeshes.size());
+
+        std::shared_ptr<Entity> submesh = std::make_shared<Entity>(entity->GetScene(), name);
         submesh->AddComponent<SubmeshComponent>(vertices, indices, material);
         submesh->GetComponent<TransformComponent>().DecomposeTransform(parentTransform);
         submesh->GetComponent<RelationshipComponent>().SetParent(entity);
-        submeshes[mesh->mName.C_Str()] = submesh;
+        submeshes[name] = submesh;
     }
 
     Mesh::Mesh(Entity* entity, std::string const& path) : entity(entity) {
-        LoadMesh(path);
+        this->LoadMesh(path);
     }
 
     void Mesh::Render(std::shared_ptr<Shader> shader, bool useTexture, bool skipTransparent) {
