@@ -3,7 +3,7 @@
 
 namespace Nickel2 {
     namespace Utils {
-        static uint32_t GetShaderStageOpenGL(ShaderStage stage) {
+        static uint32_t GetShaderStage(ShaderStage stage) {
             switch (stage) {
                 case ShaderStage::Vertex: return GL_VERTEX_SHADER;
                 case ShaderStage::Fragment: return GL_FRAGMENT_SHADER;
@@ -14,7 +14,7 @@ namespace Nickel2 {
                 default: return GL_NONE;
             }
         }
-        
+
         static std::string GetShaderStageString(ShaderStage stage) {
             switch (stage) {
                 case ShaderStage::Vertex: return "vertex";
@@ -45,7 +45,7 @@ namespace Nickel2 {
         std::vector<uint32_t> shaders;
 
         for (auto&& [stage, source] : sources) {
-            uint32_t id = glCreateShader(Utils::GetShaderStageOpenGL(stage));
+            uint32_t id = glCreateShader(Utils::GetShaderStage(stage));
             const char* sources[] = { source.c_str() };
             glShaderSource(id, 1, sources, nullptr);
             glCompileShader(id);

@@ -56,7 +56,7 @@ namespace Nickel2 {
             } return false;
         }
 
-        static GLenum FramebufferTextureFormatToGL(FramebufferTextureFormat format) {
+        static GLenum GetFramebufferTextureFormat(FramebufferTextureFormat format) {
             switch (format) {
                 case FramebufferTextureFormat::RGBA8: return GL_RGBA8;
                 case FramebufferTextureFormat::RED_INTEGER: return GL_RED_INTEGER;
@@ -158,7 +158,7 @@ namespace Nickel2 {
     void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value) {
         NK_CORE_ASSERT(attachmentIndex < colorAttachments.size());
         FramebufferTextureSpecification& spec = colorAttachmentSpecifications[attachmentIndex];
-        glClearTexImage(colorAttachments[attachmentIndex], 0, Utils::FramebufferTextureFormatToGL(spec.textureFormat), GL_INT, &value);
+        glClearTexImage(colorAttachments[attachmentIndex], 0, Utils::GetFramebufferTextureFormat(spec.textureFormat), GL_INT, &value);
     }
 
     std::vector<uint8_t> OpenGLFramebuffer::GetPixels(std::vector<uint8_t>& buffer, uint32_t attachmentIndex, uint32_t channels) {

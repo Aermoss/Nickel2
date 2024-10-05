@@ -5,18 +5,20 @@
 #include <glad/glad.h>
 
 namespace Nickel2 {
-    const char* OpenGLGetErrorString(int32_t error) {
-        switch (error) {
-            case GL_NO_ERROR: return "No error.";
-            case GL_INVALID_ENUM: return "Invalid enum.";
-            case GL_INVALID_VALUE: return "Invalid value.";
-            case GL_INVALID_OPERATION: return "Invalid operation.";
-            case GL_INVALID_FRAMEBUFFER_OPERATION: return "Invalid framebuffer operation.";
-            case GL_OUT_OF_MEMORY: return "Out of memory.";
-            case GL_STACK_UNDERFLOW: return "Stack underflow.";
-            case GL_STACK_OVERFLOW: return "Stack overflow.";
-            case GL_CONTEXT_LOST: return "Context lost.";
-            default: return "Unknown error.";
+    namespace Utils {
+        const char* GetErrorString(int32_t error) {
+            switch (error) {
+                case GL_NO_ERROR: return "No error.";
+                case GL_INVALID_ENUM: return "Invalid enum.";
+                case GL_INVALID_VALUE: return "Invalid value.";
+                case GL_INVALID_OPERATION: return "Invalid operation.";
+                case GL_INVALID_FRAMEBUFFER_OPERATION: return "Invalid framebuffer operation.";
+                case GL_OUT_OF_MEMORY: return "Out of memory.";
+                case GL_STACK_UNDERFLOW: return "Stack underflow.";
+                case GL_STACK_OVERFLOW: return "Stack overflow.";
+                case GL_CONTEXT_LOST: return "Context lost.";
+                default: return "Unknown error.";
+            }
         }
     }
 
@@ -41,7 +43,7 @@ namespace Nickel2 {
 
     void OpenGLContext::CheckErrors() {
         int32_t error = glGetError();
-        NK_CORE_ASSERT(!error, OpenGLGetErrorString(error));
+        NK_CORE_ASSERT(!error, Utils::GetErrorString(error));
     }
 
     void OpenGLContext::SwapBuffers() {

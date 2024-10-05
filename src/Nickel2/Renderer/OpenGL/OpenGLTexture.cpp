@@ -5,7 +5,7 @@
 
 namespace Nickel2 {
     namespace Utils {
-        static GLenum RoentgenImageFormatToGLDataFormat(ImageFormat format) {
+        static uint32_t GetImageFormat(ImageFormat format) {
             switch (format) {
                 case ImageFormat::RGB8: return GL_RGB;
                 case ImageFormat::RGBA8: return GL_RGBA;
@@ -13,7 +13,7 @@ namespace Nickel2 {
             } return 0;
         }
         
-        static GLenum RoentgenImageFormatToGLInternalFormat(ImageFormat format) {
+        static uint32_t GetInternalImageFormat(ImageFormat format) {
             switch (format) {
                 case ImageFormat::RGB8: return GL_RGB8;
                 case ImageFormat::RGBA8: return GL_RGBA8;
@@ -24,8 +24,8 @@ namespace Nickel2 {
 
     OpenGLTexture2D::OpenGLTexture2D(const TextureSpecification& specification)
         : specification(specification), width(specification.width), height(specification.height),
-          internalFormat(Utils::RoentgenImageFormatToGLInternalFormat(specification.format)),
-          dataFormat(Utils::RoentgenImageFormatToGLDataFormat(specification.format)) {
+          internalFormat(Utils::GetInternalImageFormat(specification.format)),
+          format(Utils::GetImageFormat(specification.format)) {
 
         glCreateTextures(GL_TEXTURE_2D, 1, &id);
         glTextureStorage2D(id, 1, internalFormat, width, height);
@@ -52,18 +52,18 @@ namespace Nickel2 {
         if (data != nullptr) {
             this->isLoaded = true;
             this->width = width, this->height = height;
-            GLenum internalFormat = 0, dataFormat = 0;
+            GLenum internalFormat = 0, format = 0;
 
             if (channels == 4)
-                internalFormat = this->isHDR ? GL_RGBA16F : GL_RGBA8, dataFormat = GL_RGBA;
+                internalFormat = this->isHDR ? GL_RGBA16F : GL_RGBA8, format = GL_RGBA;
 
             if (channels == 3)
-                internalFormat = this->isHDR ? GL_RGB16F : GL_RGB8, dataFormat = GL_RGB;
+                internalFormat = this->isHDR ? GL_RGB16F : GL_RGB8, format = GL_RGB;
 
             this->internalFormat = internalFormat;
-            this->dataFormat = dataFormat;
+            this->format = format;
 
-            NK_CORE_ASSERT(internalFormat & dataFormat, "Unsupported format.");
+            NK_CORE_ASSERT(internalFormat & format, "Unsupported format.");
 
             glCreateTextures(GL_TEXTURE_2D, 1, &id);
             glTextureStorage2D(id, 1, internalFormat, width, height);
@@ -71,7 +71,7 @@ namespace Nickel2 {
             glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTextureParameteri(id, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTextureParameteri(id, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glTextureSubImage2D(id, 0, 0, 0, width, height, dataFormat, this->isHDR ? GL_FLOAT : GL_UNSIGNED_BYTE, data);
+            glTextureSubImage2D(id, 0, 0, 0, width, height, format, this->isHDR ? GL_FLOAT : GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);
 
             Nickel2::Logger::Log(Nickel2::Logger::Level::Info, "Texture2D", ("Texture loaded successfully: \"" + path + "\", id: " + std::to_string(id) + ".").c_str());
@@ -86,9 +86,9 @@ namespace Nickel2 {
     }
 
     void OpenGLTexture2D::SetData(void* data, uint32_t size) {
-        uint32_t bpp = dataFormat == GL_RGBA ? 4 : 3;
+        uint32_t bpp = format == GL_RGBA ? 4 : 3;
         NK_CORE_ASSERT(size == width * height * bpp, "Incomplete data.");
-        glTextureSubImage2D(id, 0, 0, 0, width, height, dataFormat, GL_UNSIGNED_BYTE, data);
+        glTextureSubImage2D(id, 0, 0, 0, width, height, format, GL_UNSIGNED_BYTE, data);
     }
 
     void OpenGLTexture2D::Bind(uint32_t binding) const {

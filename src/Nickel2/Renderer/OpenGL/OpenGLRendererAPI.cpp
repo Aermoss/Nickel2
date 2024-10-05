@@ -4,20 +4,22 @@
 #include <glad/glad.h>
 
 namespace Nickel2 {
-    void OpenGLMessageCallback(unsigned source, unsigned type, unsigned id, unsigned severity, int length, const char* message, const void* userParam) {
-        switch (severity) {
-            case GL_DEBUG_SEVERITY_HIGH: break;
-            case GL_DEBUG_SEVERITY_MEDIUM: break;
-            case GL_DEBUG_SEVERITY_LOW: break;
-            case GL_DEBUG_SEVERITY_NOTIFICATION: break;
-            default: break;
-        } return;
+    namespace Utils {
+        void MessageCallback(unsigned source, unsigned type, unsigned id, unsigned severity, int length, const char* message, const void* userParam) {
+            switch (severity) {
+                case GL_DEBUG_SEVERITY_HIGH: break;
+                case GL_DEBUG_SEVERITY_MEDIUM: break;
+                case GL_DEBUG_SEVERITY_LOW: break;
+                case GL_DEBUG_SEVERITY_NOTIFICATION: break;
+                default: break;
+            } return;
+        }
     }
 
     void OpenGLRendererAPI::Initialize() {
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(OpenGLMessageCallback, nullptr);
+        glDebugMessageCallback(Utils::MessageCallback, nullptr);
         glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
 
         glEnable(GL_DEPTH_TEST);

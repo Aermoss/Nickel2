@@ -4,21 +4,23 @@
 #include <glad/glad.h>
 
 namespace Nickel2 {
-    static GLenum DataTypeToOpenGLType(DataType type) {
-        switch (type) {
-            case DataType::Float: return GL_FLOAT;
-            case DataType::Float2: return GL_FLOAT;
-            case DataType::Float3: return GL_FLOAT;
-            case DataType::Float4: return GL_FLOAT;
-            case DataType::Mat3: return GL_FLOAT;
-            case DataType::Mat4: return GL_FLOAT;
-            case DataType::Int: return GL_INT;
-            case DataType::Int2: return GL_INT;
-            case DataType::Int3: return GL_INT;
-            case DataType::Int4: return GL_INT;
-            case DataType::Bool: return GL_BOOL;
-            default: break;
-        } return 0;
+    namespace Utils {
+        static GLenum GetDataType(DataType type) {
+            switch (type) {
+                case DataType::Float: return GL_FLOAT;
+                case DataType::Float2: return GL_FLOAT;
+                case DataType::Float3: return GL_FLOAT;
+                case DataType::Float4: return GL_FLOAT;
+                case DataType::Mat3: return GL_FLOAT;
+                case DataType::Mat4: return GL_FLOAT;
+                case DataType::Int: return GL_INT;
+                case DataType::Int2: return GL_INT;
+                case DataType::Int3: return GL_INT;
+                case DataType::Int4: return GL_INT;
+                case DataType::Bool: return GL_BOOL;
+                default: break;
+            } return 0;
+        }
     }
 
     OpenGLVertexArray::OpenGLVertexArray() {
@@ -49,7 +51,7 @@ namespace Nickel2 {
                     glEnableVertexArrayAttrib(id, vertexBufferIndex);
                     glVertexArrayAttribBinding(id, vertexBufferIndex, 0);
                     glVertexArrayAttribFormat(id, vertexBufferIndex, element.GetComponentCount(), \
-                        DataTypeToOpenGLType(element.type), element.normalized ? GL_TRUE : GL_FALSE, element.offset);
+                        Utils::GetDataType(element.type), element.normalized ? GL_TRUE : GL_FALSE, element.offset);
                     vertexBufferIndex++;
                     break;
                 }
@@ -62,7 +64,7 @@ namespace Nickel2 {
                     glEnableVertexArrayAttrib(id, vertexBufferIndex);
                     glVertexArrayAttribBinding(id, vertexBufferIndex, 0);
                     glVertexArrayAttribIFormat(id, vertexBufferIndex, element.GetComponentCount(), \
-                        DataTypeToOpenGLType(element.type), element.offset);
+                        Utils::GetDataType(element.type), element.offset);
                     vertexBufferIndex++;
                     break;
                 }
@@ -75,7 +77,7 @@ namespace Nickel2 {
                         glEnableVertexArrayAttrib(id, vertexBufferIndex);
                         glVertexArrayAttribBinding(id, vertexBufferIndex, 0);
                         glVertexArrayBindingDivisor(id, vertexBufferIndex, 1);
-                        glVertexArrayAttribFormat(id, vertexBufferIndex, count, DataTypeToOpenGLType(element.type), \
+                        glVertexArrayAttribFormat(id, vertexBufferIndex, count, Utils::GetDataType(element.type), \
                             element.normalized ? GL_TRUE : GL_FALSE, element.offset + sizeof(float) * count * i);
                         vertexBufferIndex++;
                     } break;

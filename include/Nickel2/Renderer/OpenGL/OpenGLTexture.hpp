@@ -12,7 +12,7 @@ namespace Nickel2 {
             std::string path;
             bool isLoaded = false, isHDR = false;
             uint32_t id, width, height;
-            GLenum internalFormat, dataFormat;
+            GLenum internalFormat, format;
 
         public:
             OpenGLTexture2D(const TextureSpecification& specification);
