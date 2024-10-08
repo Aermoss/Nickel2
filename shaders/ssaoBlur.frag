@@ -1,6 +1,6 @@
 #version 460
 
-out float fragColor;
+out vec4 fragColor;
 
 in vec2 fragTexCoord;
 
@@ -17,5 +17,5 @@ void main() {
         }
     }
 
-    fragColor = result / (4.0f * 4.0f);
+    fragColor = vec4(vec3(result / (4.0f * 4.0f)), 1.0f);
 }  

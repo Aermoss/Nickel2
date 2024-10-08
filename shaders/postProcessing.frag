@@ -1,8 +1,8 @@
 #version 460
 
-#define PI 3.14159265359
-
 out vec4 fragColor;
+
+const float PI = 3.14159265359f;
 
 in DATA {
     vec3 position;
