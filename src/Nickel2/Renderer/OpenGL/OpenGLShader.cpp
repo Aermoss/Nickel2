@@ -59,7 +59,7 @@ namespace Nickel2 {
                 std::vector<char> buffer(length);
                 glGetShaderInfoLog(id, length, nullptr, buffer.data());
                 std::string string(buffer.begin(), buffer.end());
-                Logger::Log(Logger::Level::Error, "Shader", ("Failed to compile the " + Utils::GetShaderStageString(stage) + "shader: \n" + string).c_str());
+                Logger::Log(Logger::Level::Error, "Shader", ("Failed to compile the " + Utils::GetShaderStageString(stage) + " shader: \n" + string).c_str());
                 glDeleteShader(id);
             } else {
                 glAttachShader(program, id);
