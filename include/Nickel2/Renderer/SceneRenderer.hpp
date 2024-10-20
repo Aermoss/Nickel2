@@ -51,7 +51,8 @@ namespace Nickel2 {
             
             uint32_t gPosition, gAlbedo, gNormal, gBuffer, envCubeMap, brdfLUT, captureFrameBuffer, captureRenderBuffer, depthRenderBuffer, \
                 irradianceMap, prefilterMap, depthMapPointFrameBuffer, depthMapPoint, depthMapDirectionalFrameBuffer, depthMapDirectional, \
-                ssaoFrameBuffer, ssaoBlurFrameBuffer, ssaoColorBuffer, ssaoColorBufferBlur, noiseTexture, postProcessingFrameBuffer, postProcessingColorBuffer, postProcessingDepthBuffer;
+                    ssaoFrameBuffer, ssaoBlurFrameBuffer, ssaoColorBuffer, ssaoColorBufferBlur, noiseTexture, postProcessingFrameBuffer, \
+                        postProcessingRenderBuffer, postProcessingColorBuffers[2], pingPongFrameBuffers[2], pingPongColorBuffers[2];
 
             float logoTransparency = 1.0f, backgroundTransparency = 1.0f;
             bool introState = true, consoleState = false, consoleKeyState = false, \
@@ -74,7 +75,7 @@ namespace Nickel2 {
             glm::vec2 windowSize, depthMapSize = glm::vec2(8192.0f, 8192.0f);
             ShaderLibrary shaderLibrary;
 
-            std::shared_ptr<Shader> defaultShader, basicShader, depthCubeMapShader, depthMapShader, equirectangularToCubeMapShader, \
+            std::shared_ptr<Shader> defaultShader, basicShader, depthCubeMapShader, depthMapShader, equirectangularToCubeMapShader, bloomBlurShader, \
                 postProcessingShader, irradianceShader, prefilterShader, brdfShader, backgroundShader, gBufferShader, ssaoShader, ssaoBlurShader;
 
             void BindPostProcessingFramebuffer();
@@ -92,7 +93,7 @@ namespace Nickel2 {
             ~SceneRenderer() { this->Destroy(); }
 
             void Submit(Mesh* model);
-            void Render(Scene* scene, float deltaTime, bool updateShadowMaps = true, bool updateCamera = true, bool renderBackground = true);
+            void Render(Scene* scene, float deltaTime, float shadownUpdateInterval = 0.0f, bool updateCamera = true, bool renderBackground = true);
             void RenderBackground() const;
             void ReloadShaders();
             void Destroy();

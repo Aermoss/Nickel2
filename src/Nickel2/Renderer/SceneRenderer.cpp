@@ -366,32 +366,62 @@ namespace Nickel2 {
             { ShaderStage::Fragment, "shaders/postProcessing.frag" }
         });
 
+        bloomBlurShader = shaderLibrary.Load("bloomBlur", {
+            { ShaderStage::Vertex, "shaders/bloomBlur.vert" },
+            { ShaderStage::Fragment, "shaders/bloomBlur.frag" }
+        });
+
         glGenFramebuffers(1, &postProcessingFrameBuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, postProcessingFrameBuffer);
+        glGenTextures(2, postProcessingColorBuffers);
 
-        glGenTextures(1, &postProcessingColorBuffer);
-        glBindTexture(GL_TEXTURE_2D, postProcessingColorBuffer);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.x, size.y, 0, GL_RGBA, GL_FLOAT, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-        float color[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessingColorBuffer, 0);
+        for (uint32_t i = 0; i < 2; i++) {
+            glBindTexture(GL_TEXTURE_2D, postProcessingColorBuffers[i]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.x, size.y, 0, GL_RGBA, GL_FLOAT, 0);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+            float color[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, postProcessingColorBuffers[i], 0);
+        }
 
-        glGenTextures(1, &postProcessingDepthBuffer);
-        glBindTexture(GL_TEXTURE_2D, postProcessingDepthBuffer);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, size.x, size.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, postProcessingDepthBuffer, 0);
+        glGenRenderbuffers(1, &postProcessingRenderBuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, postProcessingRenderBuffer);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, size.x, size.y);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, postProcessingRenderBuffer);
+        uint32_t attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+        glDrawBuffers(2, attachments);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            Nickel2::Logger::Log(Nickel2::Logger::Level::Info, "SceneRenderer", "Failed to create post-processing framebuffer.");
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glGenFramebuffers(2, pingPongFrameBuffers);
+        glGenTextures(2, pingPongColorBuffers);
+
+        for (uint32_t i = 0; i < 2; i++) {
+            glBindFramebuffer(GL_FRAMEBUFFER, pingPongFrameBuffers[i]);
+            glBindTexture(GL_TEXTURE_2D, pingPongColorBuffers[i]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.x, size.y, 0, GL_RGBA, GL_FLOAT, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingPongColorBuffers[i], 0);
+            
+            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+                Nickel2::Logger::Log(Nickel2::Logger::Level::Info, "SceneRenderer", "Failed to create ping-pong framebuffer.");
+        }
     }
 
     void SceneRenderer::DestroyPostProcessing() {
         postProcessingShader = nullptr, shaderLibrary.Free("postProcessing");
-        glDeleteTextures(1, &postProcessingDepthBuffer);
-        glDeleteTextures(1, &postProcessingColorBuffer);
+        glDeleteTextures(2, pingPongColorBuffers);
+        glDeleteFramebuffers(2, pingPongFrameBuffers);
+        glDeleteTextures(2, postProcessingColorBuffers);
+        glDeleteRenderbuffers(1, &postProcessingRenderBuffer);
         glDeleteFramebuffers(1, &postProcessingFrameBuffer);
     }
 
@@ -612,9 +642,8 @@ namespace Nickel2 {
         std::vector<glm::vec3> positions;
         std::vector<float> brightnesses;
 
-        for (uint32_t i = 0; i < lights.size(); i++) {
+        for (uint32_t i = 0; i < lights.size(); i++)
             positions.push_back(lights[i].position), colors.push_back(glm::vec4(lights[i].color, lights[i].brightness));
-        }
 
         defaultShader->Bind();
         defaultShader->SetInt("pointLightCount", lights.size());
@@ -758,7 +787,7 @@ namespace Nickel2 {
         queue.push_back(model);
     }
 
-    void SceneRenderer::Render(Scene* scene, float deltaTime, bool updateShadowMaps, bool updateCamera, bool renderBackground) {
+    void SceneRenderer::Render(Scene* scene, float deltaTime, float shadownUpdateInterval, bool updateCamera, bool renderBackground) {
         Camera* camera = scene->GetPrimaryCamera();
         UpdatePointLights(scene->GetLights());
 
@@ -793,8 +822,12 @@ namespace Nickel2 {
         for (Entity* entity : scene->GetAllEntitiesWith<MeshComponent>())
             this->Submit(entity->GetComponent<MeshComponent>().mesh);
 
-        if (updateShadowMaps)
+        static float shadowUpdateCooldown = 0.0f;
+
+        if (shadowUpdateCooldown <= 0.0f) {
             this->UpdateShadowMaps(scene, false);
+            shadowUpdateCooldown = shadownUpdateInterval;
+        } shadowUpdateCooldown -= deltaTime;
 
         if (updateCamera) {
             camera->UpdateMatrices(defaultShader);
@@ -890,33 +923,37 @@ namespace Nickel2 {
         queue.clear();
         UnbindPostProcessingFramebuffer();
 
-        postProcessingShader->Bind();
-        postProcessingShader->SetInt("textureScale", 1);
-        postProcessingShader->SetInt("albedoMap", 0);
-        postProcessingShader->SetFloat("time", window->GetTime());
-        postProcessingShader->SetFloat2("resolution", size);
-        glm::mat4 model = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f)), glm::vec3(1.0f));
-        postProcessingShader->SetMat4("model", model);
-        postProcessingShader->SetMat3("inverseModel", glm::transpose(glm::inverse(glm::mat3(model))));
-        postProcessingShader->SetMat4("view", glm::mat4(1.0f));
-        postProcessingShader->SetMat4("proj", glm::mat4(1.0f));
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, postProcessingColorBuffer);
-        RenderQuad();
-        postProcessingShader->Unbind();
+        bool horizontal = true;
+        bloomBlurShader->Bind();
+        bloomBlurShader->SetInt("image", 0);
 
-        if (Input::IsKeyHeld(Key::F1)) {
-            std::shared_ptr<Framebuffer> frameBuffer = Framebuffer::Create({
-                .width = static_cast<uint32_t>(size.x), .height = static_cast<uint32_t>(size.y),
-                .samples = 1, .attachments = {
-                    { FramebufferTextureFormat::RGBA8 }
-                }
-            });
+        for (uint32_t i = 0; i < 16; i++) {
+            glBindFramebuffer(GL_FRAMEBUFFER, pingPongFrameBuffers[horizontal]);
+            bloomBlurShader->SetInt("horizontal", horizontal);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, i == 0 ? postProcessingColorBuffers[1] : pingPongColorBuffers[!horizontal]);
+            RenderQuad();
+            horizontal = !horizontal;
+        }
 
-            frameBuffer->Bind();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        for (uint32_t i = 0; i < (Input::IsKeyHeld(Key::F1) ? 2 : 1); i++) {
+            std::shared_ptr<Framebuffer> frameBuffer;
+
+            if (i != 0) {
+                frameBuffer = Framebuffer::Create({
+                    .width = static_cast<uint32_t>(size.x), .height = static_cast<uint32_t>(size.y),
+                    .samples = 1, .attachments = {
+                        { FramebufferTextureFormat::RGBA8 }
+                    }
+                }); frameBuffer->Bind();
+            }
+
             postProcessingShader->Bind();
             postProcessingShader->SetInt("textureScale", 1);
             postProcessingShader->SetInt("albedoMap", 0);
+            postProcessingShader->SetInt("bloomBlur", 1);
             postProcessingShader->SetFloat("time", window->GetTime());
             postProcessingShader->SetFloat2("resolution", size);
             glm::mat4 model = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f)), glm::vec3(1.0f));
@@ -925,21 +962,26 @@ namespace Nickel2 {
             postProcessingShader->SetMat4("view", glm::mat4(1.0f));
             postProcessingShader->SetMat4("proj", glm::mat4(1.0f));
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, postProcessingColorBuffer);
+            glBindTexture(GL_TEXTURE_2D, postProcessingColorBuffers[0]);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, pingPongColorBuffers[!horizontal]);
             RenderQuad();
             postProcessingShader->Unbind();
 
-            uint32_t channels = 3;
-            std::vector<uint8_t> pixels;
-            frameBuffer->GetPixels(pixels, 0, channels);
-            frameBuffer->Unbind();
+            if (i != 0) {
+                uint32_t channels = 3;
+                std::vector<uint8_t> pixels;
+                frameBuffer->GetPixels(pixels, 0, channels);
+                frameBuffer->Unbind();
 
-            stbi_flip_vertically_on_write(true);
-            stbi_write_png("screenshot.png", size.x, size.y, channels, pixels.data(), Framebuffer::CalculateStride(size.x, channels));
+                stbi_flip_vertically_on_write(true);
+                stbi_write_png("screenshot.png", size.x, size.y, channels, pixels.data(), Framebuffer::CalculateStride(size.x, channels));
+            }
         }
 
         ImGui::BeginChild("Render");
         ImVec2 wsize = ImGui::GetWindowSize();
+        ImGui::Image((void*) (intptr_t) pingPongColorBuffers[!horizontal], wsize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::Image((void*) (intptr_t) depthMapDirectional, wsize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::Image((void*) (intptr_t) ssaoColorBuffer, wsize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::Image((void*) (intptr_t) gPosition, wsize, ImVec2(0, 1), ImVec2(1, 0));
@@ -1049,6 +1091,7 @@ namespace Nickel2 {
         gBufferShader = shaderLibrary.Get("gBuffer");
         ssaoShader = shaderLibrary.Get("ssao");
         ssaoBlurShader = shaderLibrary.Get("ssaoBlur");
+        bloomBlurShader = shaderLibrary.Get("bloomBlur");
 
         if (enableSkybox) {
             equirectangularToCubeMapShader = shaderLibrary.Get("equirectangularToCubeMap");

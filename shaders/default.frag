@@ -1,6 +1,7 @@
 #version 460
 
-out vec4 fragColor;
+layout (location = 0) out vec4 fragColor;
+layout (location = 1) out vec4 brightColor;
 
 in DATA {
     vec3 position;
@@ -170,11 +171,10 @@ void main() {
     float roughness = roughnessDefault;
     float ambientFactor = 3.0f;
     float ambient = enableSSAO == 1 ? ssaoFactor / ambientFactor : 1.0f / ambientFactor;
+    ambient *= ambientDefault;
 
-    if (useAlbedoMap == 1) {
-        vec4 color = texture(albedoMap, data.texCoord);
-        albedo = vec4(pow(color.rgb, vec3(2.2f)), color.a);
-    }
+    if (useAlbedoMap == 1)
+        albedo = texture(albedoMap, data.texCoord);
 
 #if 0
     if (useMetallicMap == 1 && enableIBL == 1)
@@ -274,5 +274,8 @@ void main() {
     vec3 color = ao + Lo;
     // color = color / (color + vec3(1.0f));
     // color = pow(color, vec3(1.0f / 2.2f));
+
+    float brightness = dot(color, vec3(0.2126f, 0.7152f, 0.0722f));
+    brightColor = brightness > 1.0f ? vec4(color, 1.0f) : vec4(0.0f, 0.0f, 0.0f, 1.0f);
     fragColor = vec4(color, albedo.a);
 }

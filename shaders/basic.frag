@@ -1,6 +1,7 @@
 #version 460
 
-out vec4 fragColor;
+layout (location = 0) out vec4 fragColor;
+layout (location = 1) out vec4 brightColor;
 
 in DATA {
     vec3 position;
@@ -32,5 +33,7 @@ void main() {
     if (isTransparent == 1)
         albedo.a = transparency;
 
+    float brightness = dot(albedo.xyz, vec3(0.2126f, 0.7152f, 0.0722f));
+    brightColor = brightness > 1.0f ? vec4(albedo.xyz, 1.0f) : vec4(0.0f, 0.0f, 0.0f, 1.0f);
     fragColor = albedo;
 }
