@@ -1,10 +1,13 @@
 #include <Nickel2/nkpch.hpp>
 #include <Nickel2/Audio/Source.hpp>
 #include <Nickel2/Scene/Entity.hpp>
+#include <Nickel2/Core/Application.hpp>
 
 namespace Nickel2 {
-    Source::Source(Entity* entity, Listener* listener, const char* filePath, bool looping, float gain, float pitch, float rollOffFactor, float refDistance, float maxDistance)
-        : entity(entity), listener(listener), lastTranslation(0.0f), gain(gain), pitch(pitch), looping(looping) {
+    Source::Source(Entity* entity, Listener* listener, const char* filePath, bool looping, float pitch, float gain, float rollOffFactor, float refDistance, float maxDistance)
+        : entity(entity), listener(listener), lastTranslation(0.0f), lastTimeScale(Application::Get().GetTimeScale()), \
+          pitch(pitch * lastTimeScale), gain(gain), looping(looping) {
+
         void* data;
         int32_t format, size, freq;
         alutLoadWAVFile((ALbyte*) filePath, &format, &data, &size, &freq, nullptr);
@@ -39,8 +42,9 @@ namespace Nickel2 {
     }
 
     void Source::SetPitch(float pitch) {
-        alSourcef(source, AL_PITCH, pitch);
-        this->pitch = pitch;
+        lastTimeScale = Application::Get().GetTimeScale();
+        alSourcef(source, AL_PITCH, pitch * lastTimeScale);
+        this->pitch = pitch * lastTimeScale;
     }
 
     void Source::SetGain(float gain) {
@@ -68,7 +72,7 @@ namespace Nickel2 {
     }
 
     float Source::GetPitch() {
-        return pitch;
+        return pitch / lastTimeScale;
     }
 
     float Source::GetGain() {
@@ -135,6 +139,14 @@ namespace Nickel2 {
 
         if (!dirtyVelocity)
             velocity = glm::round(1 / deltaTime * (translation - lastTranslation));
+
+        float timeScale = Application::Get().GetTimeScale();
+
+        if (timeScale != lastTimeScale) {
+            pitch = pitch / lastTimeScale * timeScale;
+            alSourcef(source, AL_PITCH, pitch);
+            lastTimeScale = timeScale;
+        }
 
         alSource3f(source, AL_POSITION, translation.x, translation.y, translation.z);
         alSource3f(source, AL_VELOCITY, velocity.x, velocity.y, velocity.z);

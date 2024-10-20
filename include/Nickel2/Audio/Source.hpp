@@ -16,13 +16,11 @@ namespace Nickel2 {
         private:
             Entity* entity;
             Listener* listener;
-
-            bool dirtyVelocity = false;
-            glm::vec3 lastTranslation, velocity;
             uint32_t id, buffer, source;
-            float rollOffFactor, refDistance, maxDistance;
-            float gain, pitch;
-            bool looping;
+            glm::vec3 lastTranslation, velocity;
+            float rollOffFactor, refDistance, \
+                maxDistance, lastTimeScale, pitch, gain;
+            bool looping, dirtyVelocity = false;
 
         public:
             Source(Entity* entity, Listener* listener, const char* filePath, bool looping = false, \
