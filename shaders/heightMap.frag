@@ -229,7 +229,7 @@ void main() {
 
     vec3 ambient = (kD * diffuse + specular) * ao;
     vec3 color = ambient + Lo;
-    color = color / (color + vec3(1.0f));
-    color = pow(color, vec3(1.0f / 2.2f)); 
+    // color = color / (color + vec3(1.0f));
+    // color = pow(color, vec3(1.0f / 2.2f)); 
     fragColor = vec4(color, 1.0f);
 }
