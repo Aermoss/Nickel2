@@ -55,23 +55,23 @@ namespace Nickel2 {
 
     glm::vec3 Camera::GetFront() {
         return glm::vec3(
-            cos(glm::radians(yaw)) * cos(glm::radians(pitch)),
-            sin(glm::radians(pitch)),
-            sin(glm::radians(yaw)) * cos(glm::radians(pitch))
+            glm::cos(glm::radians(yaw)) * glm::cos(glm::radians(pitch)),
+            glm::sin(glm::radians(pitch)),
+            glm::sin(glm::radians(yaw)) * glm::cos(glm::radians(pitch))
         );
     }
 
     glm::vec3 Camera::GetRight() {
         return glm::vec3(
-            cos(glm::radians(yaw)), 0.0f, -sin(glm::radians(yaw))
+            glm::cos(glm::radians(yaw)), 0.0f, -glm::sin(glm::radians(yaw))
         );
     }
 
     glm::vec3 Camera::GetUp() {
         return glm::vec3(
-            sin(glm::radians(pitch)) * sin(glm::radians(yaw)),
-            cos(glm::radians(pitch)),
-            cos(glm::radians(pitch)) * sin(glm::radians(yaw))
+            glm::sin(glm::radians(pitch)) * glm::sin(glm::radians(yaw)),
+            glm::cos(glm::radians(pitch)),
+            glm::cos(glm::radians(pitch)) * glm::sin(glm::radians(yaw))
         );
     }
 
