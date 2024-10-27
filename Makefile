@@ -10,7 +10,7 @@ libraryDir := ./lib
 projectDir := $(sourceDir)/$(projectName)
 rendererDir := $(projectDir)/Renderer
 vendorDir := $(sourceDir)/Vendor
-libraries := steam_api64 mono-2.0-sgen OpenAL32.dll alut.dll assimp.dll glfw3dll opengl32 Jolt.dll avcodec.dll avdevice.dll \
+libraries := steam_api64 mono-2.0-sgen OpenAL32.dll alut.dll assimp.dll glfw3dll opengl32 Jolt avcodec.dll avdevice.dll \
 	avfilter.dll avformat.dll avutil.dll postproc.dll swresample.dll swscale.dll gdi32 odbc32 odbccp32 dwmapi winmm
 executable := $(binaryDir)/Editor.exe
 staticLibrary := $(libraryDir)/lib$(projectName).a
