@@ -171,7 +171,7 @@ void main() {
     float roughness = roughnessDefault;
     float ambientFactor = 3.0f;
     float ambient = enableSSAO == 1 ? ssaoFactor / ambientFactor : 1.0f / ambientFactor;
-    ambient *= ambientDefault;
+    // ambient *= ambientDefault;
 
     if (useAlbedoMap == 1)
         albedo = texture(albedoMap, data.texCoord);
@@ -211,7 +211,7 @@ void main() {
     vec3 V = normalize(data.cameraPosition - position);
     vec3 R = reflect(-V, N);
 
-    vec3 F0 = vec3(0.04f); 
+    vec3 F0 = vec3(0.04f);
     F0 = mix(F0, vec3(albedo), metallic);
     vec3 Lo = vec3(0.0f);
 
