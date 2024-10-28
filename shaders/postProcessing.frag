@@ -27,6 +27,7 @@ uniform float vignetteStrength;
 uniform float exposure = 1.0f;
 uniform float gamma = 2.2f;
 
+uniform int enableBloom = 0;
 uniform int enableMotionBlur = 0;
 
 void main() {
@@ -36,18 +37,20 @@ void main() {
     vec2 texCoord = data.texCoord;
     // texCoord.x += sin(texCoord.y * 5.0f * PI + (time * 2.0f)) / 100.0f;
 
-    vec4 color = texture(albedoMap, texCoord);
+    vec3 result = texture(albedoMap, texCoord).rgb;
 
     if (enableMotionBlur == 1) {
         const int numSamples = 8;
 
         for (int i = 1; i < numSamples; ++i, texCoord += velocity / 250.0f)
-            color += texture(albedoMap, texCoord);
+            result += texture(albedoMap, texCoord).rgb;
 
-        color /= numSamples;
+        result /= numSamples;
     }
 
-    vec3 result = vec3(color) + texture(bloomBlur, data.texCoord).rgb;
+    if (enableBloom == 1)
+        result += texture(bloomBlur, data.texCoord).rgb;
+
     result = vec3(1.0f) - exp(-result * exposure);
     result = pow(result, vec3(1.0f / gamma));
     fragColor = mix(vignetteColor, vec4(result, 1.0f), vignette);
