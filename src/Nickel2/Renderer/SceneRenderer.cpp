@@ -164,7 +164,138 @@ namespace Nickel2 {
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     }
 
-    void SceneRenderer::SetupShadowMaps() {
+    BloomFramebuffer::BloomFramebuffer(uint32_t windowWidth, uint32_t windowHeight, uint32_t mipChainSize) {
+        glm::vec2 mipSize(windowWidth, windowHeight);
+
+        glGenFramebuffers(1, &framebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+        for (uint32_t i = 0; i < mipChainSize; i++) {
+            mipSize *= 0.5f;
+            BloomMip mip = { mipSize, 0 };
+            glGenTextures(1, &mip.texture);
+            glBindTexture(GL_TEXTURE_2D, mip.texture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, static_cast<uint32_t>(mipSize.x), static_cast<uint32_t>(mipSize.y), 0, GL_RGBA, GL_FLOAT, nullptr);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            mipChain.emplace_back(mip);
+        }
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mipChain[0].texture, 0);
+
+        uint32_t attachments[1] = { GL_COLOR_ATTACHMENT0 };
+        glDrawBuffers(1, attachments);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            Logger::Log(Logger::Level::Error, "Failed to create bloom framebuffer.");
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    BloomFramebuffer::~BloomFramebuffer() {
+        for (uint32_t i = 0; i < (uint32_t) mipChain.size(); i++)
+            glDeleteTextures(1, &mipChain[i].texture);
+
+        glDeleteFramebuffers(1, &framebuffer);
+    }
+
+    void BloomFramebuffer::Bind() const {
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    }
+
+    void BloomFramebuffer::Unbind() const {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    BloomRenderer::BloomRenderer(uint32_t windowWidth, uint32_t windowHeight, uint32_t mipChainSize) : mipChainSize(mipChainSize) {
+        framebuffer = std::make_shared<BloomFramebuffer>(windowWidth, windowHeight, mipChainSize);
+        viewportSize = glm::vec2(windowWidth, windowHeight);
+        this->ReloadShaders();
+    }
+
+    BloomRenderer::~BloomRenderer() {
+        framebuffer = nullptr, downsampleShader = nullptr, upsampleShader = nullptr;
+    }
+
+    void BloomRenderer::Resize(uint32_t windowWidth, uint32_t windowHeight) {
+        framebuffer = std::make_shared<BloomFramebuffer>(windowWidth, windowHeight, mipChainSize);
+        viewportSize = glm::vec2(windowWidth, windowHeight);
+    }
+
+    void BloomRenderer::RenderDownsamples(uint32_t sourceTexture) {
+        const std::vector<BloomMip>& mipChain = framebuffer->MipChain();
+
+        downsampleShader->Bind();
+        downsampleShader->SetFloat2("sourceResolution", viewportSize);
+        if (karisAverage) downsampleShader->SetInt("mipLevel", 0);
+        downsampleShader->SetInt("sourceTexture", 0);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, sourceTexture);
+
+        for (uint32_t i = 0; i < (uint32_t) mipChain.size(); i++) {
+            const BloomMip& mip = mipChain[i];
+            RenderCommand::SetViewport(0, 0, mip.size.x, mip.size.y);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mip.texture, 0);
+            RenderQuad();
+            downsampleShader->SetFloat2("sourceResolution", mip.size);
+            glBindTexture(GL_TEXTURE_2D, mip.texture);
+            if (i == 0) { downsampleShader->SetInt("mipLevel", 1); }
+        }
+
+        downsampleShader->Unbind();
+    }
+
+    void BloomRenderer::RenderUpsamples(float filterRadius) {
+        const std::vector<BloomMip>& mipChain = framebuffer->MipChain();
+
+        upsampleShader->Bind();
+        upsampleShader->SetFloat("filterRadius", filterRadius);
+        upsampleShader->SetInt("sourceTexture", 0);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE);
+        glBlendEquation(GL_FUNC_ADD);
+
+        for (uint32_t i = (uint32_t) mipChain.size() - 1; i > 0; i--) {
+            const BloomMip& mip = mipChain[i];
+            const BloomMip& nextMip = mipChain[i - 1];
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, mip.texture);
+            RenderCommand::SetViewport(0, 0, nextMip.size.x, nextMip.size.y);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, nextMip.texture, 0);
+            RenderQuad();
+        }
+
+        glDisable(GL_BLEND);
+        upsampleShader->Unbind();
+    }
+
+    void BloomRenderer::RenderBloomTexture(uint32_t sourceTexture, float filterRadius) {
+        framebuffer->Bind();
+        this->RenderDownsamples(sourceTexture);
+        this->RenderUpsamples(filterRadius);
+        framebuffer->Unbind();
+
+        RenderCommand::SetViewport(0, 0, viewportSize.x, viewportSize.y);
+    }
+
+    void BloomRenderer::ReloadShaders() {
+        downsampleShader = Shader::Create("downsample", {
+            { ShaderStage::Vertex, Utils::ReadFile("shaders/sampler.vert") },
+            { ShaderStage::Fragment, Utils::ReadFile("shaders/downsample.frag") }
+        });
+
+        upsampleShader = Shader::Create("upsample", {
+            { ShaderStage::Vertex, Utils::ReadFile("shaders/sampler.vert") },
+            { ShaderStage::Fragment, Utils::ReadFile("shaders/upsample.frag") }
+        });
+    }
+
+    void SceneRenderer::InitializeShadowMaps() {
         depthCubeMapShader = shaderLibrary.Load("depthCubeMap", {
             { ShaderStage::Vertex, "shaders/depthCubeMap.vert" },
             { ShaderStage::Fragment, "shaders/depthCubeMap.frag" },
@@ -179,7 +310,7 @@ namespace Nickel2 {
         glDepthFunc(GL_LEQUAL);
         glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-        glGenFramebuffers(1, &depthMapPointFrameBuffer);
+        glGenFramebuffers(1, &depthMapPointFramebuffer);
         glGenTextures(1, &depthMapPoint);
         glBindTexture(GL_TEXTURE_CUBE_MAP, depthMapPoint);
 
@@ -191,13 +322,13 @@ namespace Nickel2 {
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-        glBindFramebuffer(GL_FRAMEBUFFER, depthMapPointFrameBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapPointFramebuffer);
         glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthMapPoint, 0);
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        glGenFramebuffers(1, &depthMapDirectionalFrameBuffer);
+        glGenFramebuffers(1, &depthMapDirectionalFramebuffer);
         glGenTextures(1, &depthMapDirectional);
         glBindTexture(GL_TEXTURE_2D, depthMapDirectional);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depthMapSize.x, depthMapSize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -207,23 +338,23 @@ namespace Nickel2 {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
         float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
         glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-        glBindFramebuffer(GL_FRAMEBUFFER, depthMapDirectionalFrameBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapDirectionalFramebuffer);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMapDirectional, 0);
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    void SceneRenderer::DestroyShadowMaps() {
-        glDeleteFramebuffers(1, &depthMapDirectionalFrameBuffer);
-        glDeleteFramebuffers(1, &depthMapPointFrameBuffer);
+    void SceneRenderer::TerminateShadowMaps() {
+        glDeleteFramebuffers(1, &depthMapDirectionalFramebuffer);
+        glDeleteFramebuffers(1, &depthMapPointFramebuffer);
         glDeleteTextures(1, &depthMapDirectional);
         glDeleteTextures(1, &depthMapPoint);
         depthCubeMapShader = nullptr, shaderLibrary.Free("depthCubeMap");
         depthMapShader = nullptr, shaderLibrary.Free("depthMap");
     }
 
-    void SceneRenderer::SetupGBuffer() {
+    void SceneRenderer::InitializeGBuffer() {
         gBufferShader = shaderLibrary.Load("gBuffer", {
             { ShaderStage::Vertex, "shaders/gBuffer.vert" },
             { ShaderStage::Fragment, "shaders/gBuffer.frag" }
@@ -256,10 +387,10 @@ namespace Nickel2 {
         uint32_t attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
         glDrawBuffers(3, attachments);
 
-        glGenRenderbuffers(1, &depthRenderBuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBuffer);
+        glGenRenderbuffers(1, &depthRenderbuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, depthRenderbuffer);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, windowSize.x, windowSize.y);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderbuffer);
         
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             Nickel2::Logger::Log(Nickel2::Logger::Level::Info, "SceneRenderer", "Failed to create G-buffer.");
@@ -268,29 +399,29 @@ namespace Nickel2 {
         enableGBuffer = true;
     }
 
-    void SceneRenderer::DestroyGBuffer() {
+    void SceneRenderer::TerminateGBuffer() {
         glDeleteTextures(1, &gAlbedo);
         glDeleteTextures(1, &gPosition);
         glDeleteTextures(1, &gNormal);
         glDeleteFramebuffers(1, &gBuffer);
-        glDeleteRenderbuffers(1, &depthRenderBuffer);
+        glDeleteRenderbuffers(1, &depthRenderbuffer);
         gBufferShader = nullptr, shaderLibrary.Free("gBuffer");
         enableGBuffer = false;
     }
 
-    void SceneRenderer::SetupSSAO() {
+    void SceneRenderer::InitializeSSAO() {
         ssaoShader = shaderLibrary.Load("ssao", {
-            { ShaderStage::Vertex, "shaders/ssao.vert" },
+            { ShaderStage::Vertex, "shaders/sampler.vert" },
             { ShaderStage::Fragment, "shaders/ssao.frag" }
         });
 
         ssaoBlurShader = shaderLibrary.Load("ssaoBlur", {
-            { ShaderStage::Vertex, "shaders/ssao.vert" },
+            { ShaderStage::Vertex, "shaders/sampler.vert" },
             { ShaderStage::Fragment, "shaders/ssaoBlur.frag" }
         });
 
-        glGenFramebuffers(1, &ssaoFrameBuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, ssaoFrameBuffer);
+        glGenFramebuffers(1, &ssaoFramebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, ssaoFramebuffer);
 
         glGenTextures(1, &ssaoColorBuffer);
         glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
@@ -300,10 +431,10 @@ namespace Nickel2 {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBuffer, 0);
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            Nickel2::Logger::Log(Nickel2::Logger::Level::Info, "SceneRenderer", "Failed to create SSAO framebuffer.");
+            Nickel2::Logger::Log(Nickel2::Logger::Level::Info, "SceneRenderer", "Failed to create SSAO framebuffer->");
 
-        glGenFramebuffers(1, &ssaoBlurFrameBuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFrameBuffer);
+        glGenFramebuffers(1, &ssaoBlurFramebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFramebuffer);
 
         glGenTextures(1, &ssaoColorBufferBlur);
         glBindTexture(GL_TEXTURE_2D, ssaoColorBufferBlur);
@@ -313,7 +444,7 @@ namespace Nickel2 {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ssaoColorBufferBlur, 0);
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            Nickel2::Logger::Log(Nickel2::Logger::Level::Info, "SceneRenderer", "Failed to create SSAO blur framebuffer.");
+            Nickel2::Logger::Log(Nickel2::Logger::Level::Info, "SceneRenderer", "Failed to create SSAO blur framebuffer->");
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -332,10 +463,8 @@ namespace Nickel2 {
 
         std::vector<glm::vec3> ssaoNoise;
 
-        for (uint32_t i = 0; i < 16; i++) {
-            glm::vec3 noise(randomFloats(generator) * 2.0f - 1.0f, randomFloats(generator) * 2.0f - 1.0f, 0.0f);
-            ssaoNoise.push_back(noise);
-        }
+        for (uint32_t i = 0; i < 16; i++)
+            ssaoNoise.push_back(glm::vec3(randomFloats(generator) * 2.0f - 1.0f, randomFloats(generator) * 2.0f - 1.0f, 0.0f));
 
         glGenTextures(1, &noiseTexture);
         glBindTexture(GL_TEXTURE_2D, noiseTexture);
@@ -347,18 +476,18 @@ namespace Nickel2 {
         enableSSAO = true;
     }
 
-    void SceneRenderer::DestroySSAO() {
+    void SceneRenderer::TerminateSSAO() {
         glDeleteTextures(1, &noiseTexture);
         glDeleteTextures(1, &ssaoColorBuffer);
         glDeleteTextures(1, &ssaoColorBufferBlur);
-        glDeleteFramebuffers(1, &ssaoFrameBuffer);
-        glDeleteFramebuffers(1, &ssaoBlurFrameBuffer);
+        glDeleteFramebuffers(1, &ssaoFramebuffer);
+        glDeleteFramebuffers(1, &ssaoBlurFramebuffer);
         ssaoShader = nullptr, shaderLibrary.Free("ssao");
         ssaoBlurShader = nullptr, shaderLibrary.Free("ssaoBlur");
         enableSSAO = false;
     }
 
-    void SceneRenderer::SetupPostProcessing() {
+    void SceneRenderer::InitializePostProcessing() {
         glm::vec2 size = window->GetSize();
 
         postProcessingShader = shaderLibrary.Load("postProcessing", {
@@ -366,13 +495,8 @@ namespace Nickel2 {
             { ShaderStage::Fragment, "shaders/postProcessing.frag" }
         });
 
-        bloomBlurShader = shaderLibrary.Load("bloomBlur", {
-            { ShaderStage::Vertex, "shaders/bloomBlur.vert" },
-            { ShaderStage::Fragment, "shaders/bloomBlur.frag" }
-        });
-
-        glGenFramebuffers(1, &postProcessingFrameBuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, postProcessingFrameBuffer);
+        glGenFramebuffers(1, &postProcessingFramebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, postProcessingFramebuffer);
         glGenTextures(2, postProcessingColorBuffers);
 
         for (uint32_t i = 0; i < 2; i++) {
@@ -387,46 +511,28 @@ namespace Nickel2 {
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, postProcessingColorBuffers[i], 0);
         }
 
-        glGenRenderbuffers(1, &postProcessingRenderBuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, postProcessingRenderBuffer);
+        glGenRenderbuffers(1, &postProcessingRenderbuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, postProcessingRenderbuffer);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, size.x, size.y);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, postProcessingRenderBuffer);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, postProcessingRenderbuffer);
         uint32_t attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
         glDrawBuffers(2, attachments);
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            Nickel2::Logger::Log(Nickel2::Logger::Level::Info, "SceneRenderer", "Failed to create post-processing framebuffer.");
+            Nickel2::Logger::Log(Nickel2::Logger::Level::Info, "SceneRenderer", "Failed to create post-processing framebuffer->");
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glGenFramebuffers(2, pingPongFrameBuffers);
-        glGenTextures(2, pingPongColorBuffers);
-
-        for (uint32_t i = 0; i < 2; i++) {
-            glBindFramebuffer(GL_FRAMEBUFFER, pingPongFrameBuffers[i]);
-            glBindTexture(GL_TEXTURE_2D, pingPongColorBuffers[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.x, size.y, 0, GL_RGBA, GL_FLOAT, NULL);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingPongColorBuffers[i], 0);
-            
-            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-                Nickel2::Logger::Log(Nickel2::Logger::Level::Info, "SceneRenderer", "Failed to create ping-pong framebuffer.");
-        }
     }
 
-    void SceneRenderer::DestroyPostProcessing() {
+    void SceneRenderer::TerminatePostProcessing() {
         postProcessingShader = nullptr, shaderLibrary.Free("postProcessing");
-        glDeleteTextures(2, pingPongColorBuffers);
-        glDeleteFramebuffers(2, pingPongFrameBuffers);
         glDeleteTextures(2, postProcessingColorBuffers);
-        glDeleteRenderbuffers(1, &postProcessingRenderBuffer);
-        glDeleteFramebuffers(1, &postProcessingFrameBuffer);
+        glDeleteRenderbuffers(1, &postProcessingRenderbuffer);
+        glDeleteFramebuffers(1, &postProcessingFramebuffer);
     }
 
     void SceneRenderer::BindPostProcessingFramebuffer() {
-        glBindFramebuffer(GL_FRAMEBUFFER, postProcessingFrameBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, postProcessingFramebuffer);
     }
 
     void SceneRenderer::UnbindPostProcessingFramebuffer() {
@@ -441,8 +547,8 @@ namespace Nickel2 {
         glDeleteTextures(1, &envCubeMap);
         glDeleteTextures(1, &brdfLUT);
         glDeleteTextures(1, &prefilterMap);
-        glDeleteFramebuffers(1, &captureFrameBuffer);
-        glDeleteRenderbuffers(1, &captureRenderBuffer);
+        glDeleteFramebuffers(1, &captureFramebuffer);
+        glDeleteRenderbuffers(1, &captureRenderbuffer);
 
         equirectangularToCubeMapShader = nullptr, shaderLibrary.Free("equirectangularToCubeMap");
         irradianceShader = nullptr, shaderLibrary.Free("irradiance");
@@ -472,7 +578,7 @@ namespace Nickel2 {
         });
 
         brdfShader = shaderLibrary.Load("brdf", {
-            { ShaderStage::Vertex, "shaders/brdf.vert" },
+            { ShaderStage::Vertex, "shaders/sampler.vert" },
             { ShaderStage::Fragment, "shaders/brdf.frag" }
         });
 
@@ -481,13 +587,13 @@ namespace Nickel2 {
             { ShaderStage::Fragment, "shaders/background.frag" }
         });
 
-        glGenFramebuffers(1, &captureFrameBuffer);
-        glGenRenderbuffers(1, &captureRenderBuffer);
+        glGenFramebuffers(1, &captureFramebuffer);
+        glGenRenderbuffers(1, &captureRenderbuffer);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, captureFrameBuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, captureRenderBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, captureFramebuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, captureRenderbuffer);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRenderBuffer);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRenderbuffer);
 
         glGenTextures(1, &envCubeMap);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envCubeMap);
@@ -520,7 +626,7 @@ namespace Nickel2 {
         hdrTexture->Bind();
 
         glViewport(0, 0, 512, 512);
-        glBindFramebuffer(GL_FRAMEBUFFER, captureFrameBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, captureFramebuffer);
 
         for (uint32_t i = 0; i < 6; ++i) {
             equirectangularToCubeMapShader->SetMat4("view", captureViews[i]);
@@ -530,7 +636,6 @@ namespace Nickel2 {
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
         glBindTexture(GL_TEXTURE_CUBE_MAP, envCubeMap);
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
@@ -546,8 +651,8 @@ namespace Nickel2 {
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, captureFrameBuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, captureRenderBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, captureFramebuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, captureRenderbuffer);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
 
         irradianceShader->Bind();
@@ -558,7 +663,7 @@ namespace Nickel2 {
         glBindTexture(GL_TEXTURE_CUBE_MAP, envCubeMap);
 
         glViewport(0, 0, 32, 32);
-        glBindFramebuffer(GL_FRAMEBUFFER, captureFrameBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, captureFramebuffer);
 
         for (uint32_t i = 0; i < 6; ++i) {
             irradianceShader->SetMat4("view", captureViews[i]);
@@ -568,7 +673,6 @@ namespace Nickel2 {
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
         glGenTextures(1, &prefilterMap);
         glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
 
@@ -588,14 +692,14 @@ namespace Nickel2 {
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envCubeMap);
-        glBindFramebuffer(GL_FRAMEBUFFER, captureFrameBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, captureFramebuffer);
 
         uint32_t maxMipLevels = 5;
 
         for (uint32_t mip = 0; mip < maxMipLevels; ++mip) {
             uint32_t mipWidth  = static_cast<uint32_t>(128 * std::pow(0.5, mip));
             uint32_t mipHeight = static_cast<uint32_t>(128 * std::pow(0.5, mip));
-            glBindRenderbuffer(GL_RENDERBUFFER, captureRenderBuffer);
+            glBindRenderbuffer(GL_RENDERBUFFER, captureRenderbuffer);
             glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
             glViewport(0, 0, mipWidth, mipHeight);
 
@@ -611,7 +715,6 @@ namespace Nickel2 {
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
         glGenTextures(1, &brdfLUT);
         glBindTexture(GL_TEXTURE_2D, brdfLUT);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, 0);
@@ -620,8 +723,8 @@ namespace Nickel2 {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, captureFrameBuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, captureRenderBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, captureFramebuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, captureRenderbuffer);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfLUT, 0);
 
@@ -632,7 +735,6 @@ namespace Nickel2 {
         brdfShader->Unbind();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
         glm::vec2 size = window->GetSize();
         glViewport(0, 0, size.x, size.y);
     }
@@ -667,7 +769,7 @@ namespace Nickel2 {
         };
 
         glViewport(0, 0, depthMapSize.x, depthMapSize.y);
-        glBindFramebuffer(GL_FRAMEBUFFER, depthMapPointFrameBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapPointFramebuffer);
         glClear(GL_DEPTH_BUFFER_BIT);
 
         depthCubeMapShader->Bind();
@@ -725,7 +827,7 @@ namespace Nickel2 {
             depthMapShader->Unbind();
 
             glViewport(0, 0, depthMapSize.x, depthMapSize.y);
-            glBindFramebuffer(GL_FRAMEBUFFER, depthMapDirectionalFrameBuffer);
+            glBindFramebuffer(GL_FRAMEBUFFER, depthMapDirectionalFramebuffer);
             glClear(GL_DEPTH_BUFFER_BIT);
             
             for (uint32_t i = 0; i < queue.size(); i++)
@@ -774,13 +876,29 @@ namespace Nickel2 {
         basicShader->Unbind();
         window->SwapBuffers();
 
-        SetupPostProcessing();
-        SetupShadowMaps();
-        SetupGBuffer();
-        SetupSSAO();
+        InitializePostProcessing();
+        InitializeShadowMaps();
+        InitializeGBuffer();
+        InitializeSSAO();
+
+        bloomRenderer = std::make_shared<BloomRenderer>(windowSize.x, windowSize.y);
 
         if (!skyboxPath.empty())
             LoadSkybox(skyboxPath);
+    }
+
+    SceneRenderer::~SceneRenderer() {
+        if (enableSkybox)
+            FreeSkybox();
+
+        TerminatePostProcessing();
+        TerminateShadowMaps();
+        TerminateGBuffer();
+        TerminateSSAO();
+
+        logoTexture = nullptr, bloomRenderer = nullptr;
+        defaultShader = nullptr, shaderLibrary.Free("default");
+        basicShader = nullptr, shaderLibrary.Free("basic");
     }
 
     void SceneRenderer::Submit(Mesh* model) {
@@ -810,13 +928,15 @@ namespace Nickel2 {
 
         if (size.x != windowSize.x || size.y != windowSize.y) {
             windowSize.x = size.x, windowSize.y = size.y;
-            DestroyPostProcessing(), SetupPostProcessing();
+            TerminatePostProcessing(), InitializePostProcessing();
 
             if (enableGBuffer)
-                DestroyGBuffer(), SetupGBuffer();
+                TerminateGBuffer(), InitializeGBuffer();
 
             if (enableSSAO)
-                DestroySSAO(), SetupSSAO();
+                TerminateSSAO(), InitializeSSAO();
+
+            bloomRenderer->Resize(size.x, size.y);
         }
 
         for (Entity* entity : scene->GetAllEntitiesWith<MeshComponent>())
@@ -856,7 +976,7 @@ namespace Nickel2 {
                 return;
             }
 
-            glBindFramebuffer(GL_FRAMEBUFFER, ssaoFrameBuffer);
+            glBindFramebuffer(GL_FRAMEBUFFER, ssaoFramebuffer);
             glClear(GL_COLOR_BUFFER_BIT);
 
             camera->UpdateMatrices(ssaoShader);
@@ -878,7 +998,7 @@ namespace Nickel2 {
             ssaoShader->Unbind();
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-            glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFrameBuffer);
+            glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFramebuffer);
             glClear(GL_COLOR_BUFFER_BIT);
             ssaoBlurShader->Bind();
             glActiveTexture(GL_TEXTURE0);
@@ -923,20 +1043,7 @@ namespace Nickel2 {
         queue.clear();
         UnbindPostProcessingFramebuffer();
 
-        bool horizontal = true;
-        bloomBlurShader->Bind();
-        bloomBlurShader->SetInt("image", 0);
-
-        for (uint32_t i = 0; i < 16; i++) {
-            glBindFramebuffer(GL_FRAMEBUFFER, pingPongFrameBuffers[horizontal]);
-            bloomBlurShader->SetInt("horizontal", horizontal);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, i == 0 ? postProcessingColorBuffers[1] : pingPongColorBuffers[!horizontal]);
-            RenderQuad();
-            horizontal = !horizontal;
-        }
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        bloomRenderer->RenderBloomTexture(postProcessingColorBuffers[1], bloomFilterRadius);
 
         for (uint32_t i = 0; i < (Input::IsKeyHeld(Key::F1) ? 2 : 1); i++) {
             std::shared_ptr<Framebuffer> frameBuffer;
@@ -964,7 +1071,7 @@ namespace Nickel2 {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, postProcessingColorBuffers[0]);
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, pingPongColorBuffers[!horizontal]);
+            glBindTexture(GL_TEXTURE_2D, bloomRenderer->GetBloomTexture());
             RenderQuad();
             postProcessingShader->Unbind();
 
@@ -981,7 +1088,8 @@ namespace Nickel2 {
 
         ImGui::BeginChild("Render");
         ImVec2 wsize = ImGui::GetWindowSize();
-        ImGui::Image((void*) (intptr_t) pingPongColorBuffers[!horizontal], wsize, ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::Image((void*) (intptr_t) bloomRenderer->GetBloomTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::Image((void*) (intptr_t) postProcessingColorBuffers[1], wsize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::Image((void*) (intptr_t) depthMapDirectional, wsize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::Image((void*) (intptr_t) ssaoColorBuffer, wsize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::Image((void*) (intptr_t) gPosition, wsize, ImVec2(0, 1), ImVec2(1, 0));
@@ -990,6 +1098,7 @@ namespace Nickel2 {
         ImGui::EndChild();
 
         ImGui::Checkbox("Enable SSAO", &enableSSAO);
+        ImGui::SliderFloat("Bloom Filter Radius", &bloomFilterRadius, 0.001f, 0.015f);
 
         if (Input::IsKeyHeld(Key::GraveAccent)) {
             if (consoleKeyState)
@@ -1082,6 +1191,8 @@ namespace Nickel2 {
     }
 
     void SceneRenderer::ReloadShaders() {
+        bloomRenderer->ReloadShaders();
+        
         shaderLibrary.Reload();
         defaultShader = shaderLibrary.Get("default");
         basicShader = shaderLibrary.Get("basic");
@@ -1091,7 +1202,6 @@ namespace Nickel2 {
         gBufferShader = shaderLibrary.Get("gBuffer");
         ssaoShader = shaderLibrary.Get("ssao");
         ssaoBlurShader = shaderLibrary.Get("ssaoBlur");
-        bloomBlurShader = shaderLibrary.Get("bloomBlur");
 
         if (enableSkybox) {
             equirectangularToCubeMapShader = shaderLibrary.Get("equirectangularToCubeMap");
@@ -1100,19 +1210,5 @@ namespace Nickel2 {
             brdfShader = shaderLibrary.Get("brdf");
             backgroundShader = shaderLibrary.Get("background");
         }
-    }
-
-    void SceneRenderer::Destroy() {
-        if (enableSkybox)
-            FreeSkybox();
-
-        DestroyPostProcessing();
-        DestroyShadowMaps();
-        DestroyGBuffer();
-        DestroySSAO();
-
-        logoTexture = nullptr;
-        defaultShader = nullptr, shaderLibrary.Free("default");
-        basicShader = nullptr, shaderLibrary.Free("basic");
     }
 }

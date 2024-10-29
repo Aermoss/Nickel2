@@ -1,8 +1,8 @@
 #version 460
 
-out vec4 fragColor;
-
 const float PI = 3.14159265359f;
+
+out vec4 fragColor;
 
 in DATA {
     vec3 position;
@@ -25,9 +25,9 @@ uniform vec2 velocity;
 uniform vec4 vignetteColor;
 uniform float vignetteStrength;
 uniform float exposure = 1.0f;
+uniform float bloomStrength = 0.2f;
 uniform float gamma = 2.2f;
 
-uniform int enableBloom = 0;
 uniform int enableMotionBlur = 0;
 
 void main() {
@@ -35,8 +35,6 @@ void main() {
     float vignette = pow(uv.x * uv.y * 15.0f, vignetteStrength);
 
     vec2 texCoord = data.texCoord;
-    // texCoord.x += sin(texCoord.y * 5.0f * PI + (time * 2.0f)) / 100.0f;
-
     vec3 result = texture(albedoMap, texCoord).rgb;
 
     if (enableMotionBlur == 1) {
@@ -48,8 +46,9 @@ void main() {
         result /= numSamples;
     }
 
-    if (enableBloom == 1)
-        result += texture(bloomBlur, data.texCoord).rgb;
+    vec3 hdrColor = texture(albedoMap, data.texCoord).rgb;
+    vec3 bloomColor = texture(bloomBlur, data.texCoord).rgb;
+    result += mix(hdrColor, bloomColor, bloomStrength);
 
     result = vec3(1.0f) - exp(-result * exposure);
     result = pow(result, vec3(1.0f / gamma));

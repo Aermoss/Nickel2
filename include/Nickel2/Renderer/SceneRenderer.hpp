@@ -40,42 +40,88 @@ namespace Nickel2 {
     void RenderSphere();
     void RenderCube();
     void RenderQuad();
-    void DestroyRenderer();
+
+    struct BloomMip {
+        glm::vec2 size;
+        uint32_t texture;
+    };
+
+    class BloomFramebuffer {
+        private:
+            uint32_t framebuffer;
+            std::vector<BloomMip> mipChain;
+
+        public:
+            BloomFramebuffer(uint32_t windowWidth, uint32_t windowHeight, uint32_t mipChainSize);
+            ~BloomFramebuffer();
+
+            void Bind() const;
+            void Unbind() const;
+
+            const std::vector<BloomMip>& MipChain() const { return mipChain; }
+    };
+
+    class BloomRenderer {
+        private:
+            void RenderDownsamples(uint32_t sourceTexture);
+            void RenderUpsamples(float filterRadius);
+
+            bool karisAverage = true;
+
+            glm::vec2 viewportSize;
+            std::shared_ptr<Shader> downsampleShader, upsampleShader;
+            std::shared_ptr<BloomFramebuffer> framebuffer;
+            uint32_t mipChainSize;
+
+        public:
+            BloomRenderer(uint32_t windowWidth, uint32_t windowHeight, uint32_t mipChainSize = 6);
+            ~BloomRenderer();
+
+            void Resize(uint32_t windowWidth, uint32_t windowHeight);
+            uint32_t GetBloomTexture() const { return framebuffer->MipChain()[0].texture; }
+            void RenderBloomTexture(uint32_t sourceTexture, float filterRadius);
+            void ReloadShaders();
+
+            friend class SceneRenderer;
+    };
 
     class SceneRenderer {
         private:
             Window* window;
             std::vector<Mesh*> queue;
             std::shared_ptr<Texture> logoTexture, hdrTexture;
+            std::shared_ptr<BloomRenderer> bloomRenderer;
             std::vector<glm::vec3> ssaoKernel;
-            
-            uint32_t gPosition, gAlbedo, gNormal, gBuffer, envCubeMap, brdfLUT, captureFrameBuffer, captureRenderBuffer, depthRenderBuffer, \
-                irradianceMap, prefilterMap, depthMapPointFrameBuffer, depthMapPoint, depthMapDirectionalFrameBuffer, depthMapDirectional, \
-                    ssaoFrameBuffer, ssaoBlurFrameBuffer, ssaoColorBuffer, ssaoColorBufferBlur, noiseTexture, postProcessingFrameBuffer, \
-                        postProcessingRenderBuffer, postProcessingColorBuffers[2], pingPongFrameBuffers[2], pingPongColorBuffers[2];
 
-            float logoTransparency = 1.0f, backgroundTransparency = 1.0f;
+            uint32_t gPosition, gAlbedo, gNormal, gBuffer, envCubeMap, brdfLUT, captureFramebuffer, captureRenderbuffer, depthRenderbuffer, \
+                irradianceMap, prefilterMap, depthMapPointFramebuffer, depthMapPoint, depthMapDirectionalFramebuffer, depthMapDirectional, \
+                    ssaoFramebuffer, ssaoBlurFramebuffer, ssaoColorBuffer, ssaoColorBufferBlur, noiseTexture, postProcessingFramebuffer, \
+                        postProcessingRenderbuffer, postProcessingColorBuffers[2];
+
+            float bloomFilterRadius = 0.005f, \
+                logoTransparency = 1.0f, backgroundTransparency = 1.0f;
+
             bool introState = true, consoleState = false, consoleKeyState = false, \
                 enableSkybox = false, enableSSAO = true, enableGBuffer = true;
 
-            void SetupShadowMaps();
-            void DestroyShadowMaps();
+            void InitializeShadowMaps();
+            void TerminateShadowMaps();
 
-            void SetupGBuffer();
-            void DestroyGBuffer();
+            void InitializeGBuffer();
+            void TerminateGBuffer();
 
-            void SetupSSAO();
-            void DestroySSAO();
+            void InitializeSSAO();
+            void TerminateSSAO();
 
-            void SetupPostProcessing();
-            void DestroyPostProcessing();
+            void InitializePostProcessing();
+            void TerminatePostProcessing();
 
         public:
             glm::vec4 clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
             glm::vec2 windowSize, depthMapSize = glm::vec2(8192.0f, 8192.0f);
             ShaderLibrary shaderLibrary;
 
-            std::shared_ptr<Shader> defaultShader, basicShader, depthCubeMapShader, depthMapShader, equirectangularToCubeMapShader, bloomBlurShader, \
+            std::shared_ptr<Shader> defaultShader, basicShader, depthCubeMapShader, depthMapShader, equirectangularToCubeMapShader, \
                 postProcessingShader, irradianceShader, prefilterShader, brdfShader, backgroundShader, gBufferShader, ssaoShader, ssaoBlurShader;
 
             void BindPostProcessingFramebuffer();
@@ -90,12 +136,11 @@ namespace Nickel2 {
             void UpdateShadowMaps(Scene* scene, bool updateQueue = true);
             
             SceneRenderer(Window* window, const std::string& skyboxPath = "");
-            ~SceneRenderer() { this->Destroy(); }
+            ~SceneRenderer();
 
             void Submit(Mesh* model);
             void Render(Scene* scene, float deltaTime, float shadownUpdateInterval = 0.0f, bool updateCamera = true, bool renderBackground = true);
             void RenderBackground() const;
             void ReloadShaders();
-            void Destroy();
     };
 }
