@@ -5,9 +5,9 @@ out vec4 fragColor;
 
 in vec2 fragTexCoord;
 
+uniform vec2 texelSize;
 uniform sampler2D sourceTexture;
-uniform vec2 sourceResolution;
-uniform int mipLevel = 1;
+uniform int karisAverage;
 
 vec3 PowVec3(vec3 v, float p) {
     return vec3(pow(v.x, p), pow(v.y, p), pow(v.z, p));
@@ -26,8 +26,7 @@ float KarisAverage(vec3 col) {
 }
 
 void main() {
-    vec2 srcTexelSize = 1.0f / sourceResolution;
-    float x = srcTexelSize.x, y = srcTexelSize.y;
+    float x = texelSize.x, y = texelSize.y;
 
     vec3 a = texture(sourceTexture, vec2(fragTexCoord.x - 2 * x, fragTexCoord.y + 2 * y)).rgb;
     vec3 b = texture(sourceTexture, vec2(fragTexCoord.x, fragTexCoord.y + 2 * y)).rgb;
@@ -48,28 +47,24 @@ void main() {
 
     vec3 result, groups[5];
 
-    switch (mipLevel) {
-        case 0: {
-            groups[0] = (a+b+d+e) * (0.125f / 4.0f);
-            groups[1] = (b+c+e+f) * (0.125f / 4.0f);
-            groups[2] = (d+e+g+h) * (0.125f / 4.0f);
-            groups[3] = (e+f+h+i) * (0.125f / 4.0f);
-            groups[4] = (j+k+l+m) * (0.5f / 4.0f);
-            groups[0] *= KarisAverage(groups[0]);
-            groups[1] *= KarisAverage(groups[1]);
-            groups[2] *= KarisAverage(groups[2]);
-            groups[3] *= KarisAverage(groups[3]);
-            groups[4] *= KarisAverage(groups[4]);
-            result = groups[0]+groups[1]+groups[2]+groups[3]+groups[4];
-            result = max(result, 0.0001f);
-            break;
-        } default: {
-            result = e * 0.125f;
-            result += (a + c + g + i) * 0.03125f;
-            result += (b + d + f + h) * 0.0625f;
-            result += (j + k + l + m) * 0.125f;
-            break;
-        }
+    if (karisAverage == 1) {
+        groups[0] = (a + b + d + e) * (0.125f / 4.0f);
+        groups[1] = (b + c + e + f) * (0.125f / 4.0f);
+        groups[2] = (d + e + g + h) * (0.125f / 4.0f);
+        groups[3] = (e + f + h + i) * (0.125f / 4.0f);
+        groups[4] = (j + k + l + m) * (0.5f / 4.0f);
+        groups[0] *= KarisAverage(groups[0]);
+        groups[1] *= KarisAverage(groups[1]);
+        groups[2] *= KarisAverage(groups[2]);
+        groups[3] *= KarisAverage(groups[3]);
+        groups[4] *= KarisAverage(groups[4]);
+        result = groups[0] + groups[1] + groups[2] + groups[3] + groups[4];
+        result = max(result, 0.0001f);
+    } else {
+        result = e * 0.125f;
+        result += (a + c + g + i) * 0.03125f;
+        result += (b + d + f + h) * 0.0625f;
+        result += (j + k + l + m) * 0.125f;
     }
 
     fragColor = vec4(result, 1.0f);

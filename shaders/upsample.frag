@@ -9,8 +9,7 @@ uniform sampler2D sourceTexture;
 uniform float filterRadius;
 
 void main() {
-    float x = filterRadius;
-    float y = filterRadius;
+    float x = filterRadius, y = filterRadius;
 
     vec3 a = texture(sourceTexture, vec2(fragTexCoord.x - x, fragTexCoord.y + y)).rgb;
     vec3 b = texture(sourceTexture, vec2(fragTexCoord.x, fragTexCoord.y + y)).rgb;

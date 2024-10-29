@@ -225,31 +225,32 @@ namespace Nickel2 {
     }
 
     void BloomRenderer::RenderDownsamples(uint32_t sourceTexture) {
-        const std::vector<BloomMip>& mipChain = framebuffer->MipChain();
+        const std::vector<BloomMip>& mipChain = framebuffer->GetMipChain();
 
         downsampleShader->Bind();
-        downsampleShader->SetFloat2("sourceResolution", viewportSize);
-        if (karisAverage) downsampleShader->SetInt("mipLevel", 0);
         downsampleShader->SetInt("sourceTexture", 0);
+        glm::vec2 texelSize = 1.0f / viewportSize;
 
+        glDisable(GL_BLEND);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, sourceTexture);
 
-        for (uint32_t i = 0; i < (uint32_t) mipChain.size(); i++) {
+        for (uint32_t i = 0; i < static_cast<uint32_t>(mipChain.size()); i++) {
             const BloomMip& mip = mipChain[i];
             RenderCommand::SetViewport(0, 0, mip.size.x, mip.size.y);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mip.texture, 0);
+            downsampleShader->SetInt("karisAverage", (karisAverage && i == 0) ? 1 : 0);
+            downsampleShader->SetFloat2("texelSize", texelSize);
             RenderQuad();
-            downsampleShader->SetFloat2("sourceResolution", mip.size);
             glBindTexture(GL_TEXTURE_2D, mip.texture);
-            if (i == 0) { downsampleShader->SetInt("mipLevel", 1); }
+            texelSize *= 2.0f;
         }
 
         downsampleShader->Unbind();
     }
 
     void BloomRenderer::RenderUpsamples(float filterRadius) {
-        const std::vector<BloomMip>& mipChain = framebuffer->MipChain();
+        const std::vector<BloomMip>& mipChain = framebuffer->GetMipChain();
 
         upsampleShader->Bind();
         upsampleShader->SetFloat("filterRadius", filterRadius);
@@ -259,7 +260,7 @@ namespace Nickel2 {
         glBlendFunc(GL_ONE, GL_ONE);
         glBlendEquation(GL_FUNC_ADD);
 
-        for (uint32_t i = (uint32_t) mipChain.size() - 1; i > 0; i--) {
+        for (uint32_t i = static_cast<uint32_t>(mipChain.size()) - 1; i > 0; i--) {
             const BloomMip& mip = mipChain[i];
             const BloomMip& nextMip = mipChain[i - 1];
 
@@ -1075,6 +1076,7 @@ namespace Nickel2 {
 
         ImGui::BeginChild("Render");
         ImVec2 wsize = ImGui::GetWindowSize();
+        ImGui::Image((void*) (intptr_t) bloomRenderer->GetBloomTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::Image((void*) (intptr_t) depthMapDirectional, wsize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::Image((void*) (intptr_t) ssaoColorBuffer, wsize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::Image((void*) (intptr_t) gPosition, wsize, ImVec2(0, 1), ImVec2(1, 0));

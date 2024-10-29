@@ -58,7 +58,7 @@ namespace Nickel2 {
             void Bind() const;
             void Unbind() const;
 
-            const std::vector<BloomMip>& MipChain() const { return mipChain; }
+            const std::vector<BloomMip>& GetMipChain() const { return mipChain; }
     };
 
     class BloomRenderer {
@@ -66,7 +66,7 @@ namespace Nickel2 {
             void RenderDownsamples(uint32_t sourceTexture);
             void RenderUpsamples(float filterRadius);
 
-            bool karisAverage = true;
+            bool karisAverage = false;
 
             glm::vec2 viewportSize;
             std::shared_ptr<Shader> downsampleShader, upsampleShader;
@@ -78,7 +78,7 @@ namespace Nickel2 {
             ~BloomRenderer();
 
             void Resize(uint32_t windowWidth, uint32_t windowHeight);
-            uint32_t GetBloomTexture() const { return framebuffer->MipChain()[0].texture; }
+            uint32_t GetBloomTexture() const { return framebuffer->GetMipChain()[0].texture; }
             void RenderBloomTexture(uint32_t sourceTexture, float filterRadius);
             void ReloadShaders();
 
