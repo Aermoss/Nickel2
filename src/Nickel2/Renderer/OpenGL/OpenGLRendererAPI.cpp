@@ -43,7 +43,12 @@ namespace Nickel2 {
         }
 
         void APIENTRY MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int length, const char* message, const void* userParam) {
-            Logger::Log(Logger::Level::Error, "OpenGL", (std::string(message) + ".").c_str());
+            if (severity != GL_DEBUG_SEVERITY_NOTIFICATION && !(type == GL_DEBUG_TYPE_OTHER && severity == GL_DEBUG_SEVERITY_LOW)) {
+                std::string string = std::string(message);
+                string = string[string.size() - 1] != '.' ? string + "." : string;
+                Logger::Log(type != GL_DEBUG_TYPE_ERROR ? \
+                    (severity != GL_DEBUG_SEVERITY_NOTIFICATION ? Logger::Level::Warn : Logger::Level::Info) : Logger::Level::Error, "OpenGL", string.c_str());
+            }
         }
     }
 
