@@ -625,17 +625,15 @@ namespace Nickel2 {
         hdrTexture = Texture2D::Create(filePath.c_str());
         hdrTexture->Bind();
 
-        glViewport(0, 0, 512, 512);
-        glBindFramebuffer(GL_FRAMEBUFFER, captureFramebuffer);
+        RenderCommand::SetViewport(0, 0, 512, 512);
 
         for (uint32_t i = 0; i < 6; ++i) {
             equirectangularToCubeMapShader->SetMat4("view", captureViews[i]);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubeMap, 0);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            RenderCommand::Clear();
             RenderCube();
         }
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envCubeMap);
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
@@ -650,9 +648,6 @@ namespace Nickel2 {
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, captureFramebuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, captureRenderbuffer);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
 
         irradianceShader->Bind();
@@ -661,18 +656,15 @@ namespace Nickel2 {
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envCubeMap);
-
-        glViewport(0, 0, 32, 32);
-        glBindFramebuffer(GL_FRAMEBUFFER, captureFramebuffer);
+        RenderCommand::SetViewport(0, 0, 32, 32);
 
         for (uint32_t i = 0; i < 6; ++i) {
             irradianceShader->SetMat4("view", captureViews[i]);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            RenderCommand::Clear();
             RenderCube();
         }
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glGenTextures(1, &prefilterMap);
         glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
 
@@ -692,16 +684,14 @@ namespace Nickel2 {
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, envCubeMap);
-        glBindFramebuffer(GL_FRAMEBUFFER, captureFramebuffer);
 
         uint32_t maxMipLevels = 5;
 
         for (uint32_t mip = 0; mip < maxMipLevels; ++mip) {
-            uint32_t mipWidth  = static_cast<uint32_t>(128 * std::pow(0.5, mip));
-            uint32_t mipHeight = static_cast<uint32_t>(128 * std::pow(0.5, mip));
-            glBindRenderbuffer(GL_RENDERBUFFER, captureRenderbuffer);
+            uint32_t mipWidth  = static_cast<uint32_t>(128 * std::pow(0.5f, mip));
+            uint32_t mipHeight = static_cast<uint32_t>(128 * std::pow(0.5f, mip));
             glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
-            glViewport(0, 0, mipWidth, mipHeight);
+            RenderCommand::SetViewport(0, 0, mipWidth, mipHeight);
 
             float roughness = (float) mip / (float) (maxMipLevels - 1);
             prefilterShader->SetFloat("roughness", roughness);
@@ -709,12 +699,11 @@ namespace Nickel2 {
             for (uint32_t i = 0; i < 6; ++i) {
                 prefilterShader->SetMat4("view", captureViews[i]);
                 glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                RenderCommand::Clear();
                 RenderCube();
             }
         }
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glGenTextures(1, &brdfLUT);
         glBindTexture(GL_TEXTURE_2D, brdfLUT);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, 0);
@@ -723,20 +712,18 @@ namespace Nickel2 {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, captureFramebuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, captureRenderbuffer);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfLUT, 0);
 
-        glViewport(0, 0, 512, 512);
+        RenderCommand::SetViewport(0, 0, 512, 512);
         brdfShader->Bind();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        RenderCommand::Clear();
         RenderQuad();
         brdfShader->Unbind();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glm::vec2 size = window->GetSize();
-        glViewport(0, 0, size.x, size.y);
+        RenderCommand::SetViewport(0, 0, size.x, size.y);
     }
 
     void SceneRenderer::UpdatePointLights(std::vector<Light>& lights) {
@@ -768,9 +755,9 @@ namespace Nickel2 {
             shadowProj * glm::lookAt(position, position + glm::vec3( 0.0,  0.0, -1.0), glm::vec3(0.0, -1.0,  0.0))
         };
 
-        glViewport(0, 0, depthMapSize.x, depthMapSize.y);
+        RenderCommand::SetViewport(0, 0, depthMapSize.x, depthMapSize.y);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapPointFramebuffer);
-        glClear(GL_DEPTH_BUFFER_BIT);
+        RenderCommand::Clear();
 
         depthCubeMapShader->Bind();
 
@@ -785,7 +772,7 @@ namespace Nickel2 {
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glm::vec2 size = window->GetSize();
-        glViewport(0, 0, size.x, size.y);
+        RenderCommand::SetViewport(0, 0, size.x, size.y);
     }
 
     void SceneRenderer::UpdateShadowMaps(Scene* scene, bool updateQueue) {
@@ -826,16 +813,16 @@ namespace Nickel2 {
             depthMapShader->SetMat4("lightSpaceMatrix", directionalLightSpaceMatrix);
             depthMapShader->Unbind();
 
-            glViewport(0, 0, depthMapSize.x, depthMapSize.y);
+            RenderCommand::SetViewport(0, 0, depthMapSize.x, depthMapSize.y);
             glBindFramebuffer(GL_FRAMEBUFFER, depthMapDirectionalFramebuffer);
-            glClear(GL_DEPTH_BUFFER_BIT);
+            RenderCommand::Clear();
             
             for (uint32_t i = 0; i < queue.size(); i++)
                 queue[i]->Render(depthMapShader, false, true);
 
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             glm::vec2 size = window->GetSize();
-            glViewport(0, 0, size.x, size.y);
+            RenderCommand::SetViewport(0, 0, size.x, size.y);
 
             glActiveTexture(GL_TEXTURE7);
             glBindTexture(GL_TEXTURE_2D, depthMapDirectional);
@@ -959,8 +946,8 @@ namespace Nickel2 {
 
         if (enableGBuffer) {
             glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            RenderCommand::SetClearColor(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+            RenderCommand::Clear();
             camera->UpdateMatrices(gBufferShader);
 
             for (uint32_t i = 0; i < queue.size(); i++)
@@ -977,7 +964,7 @@ namespace Nickel2 {
             }
 
             glBindFramebuffer(GL_FRAMEBUFFER, ssaoFramebuffer);
-            glClear(GL_COLOR_BUFFER_BIT);
+            RenderCommand::Clear();
 
             camera->UpdateMatrices(ssaoShader);
             
@@ -999,7 +986,7 @@ namespace Nickel2 {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
             glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFramebuffer);
-            glClear(GL_COLOR_BUFFER_BIT);
+            RenderCommand::Clear();
             ssaoBlurShader->Bind();
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
@@ -1088,8 +1075,6 @@ namespace Nickel2 {
 
         ImGui::BeginChild("Render");
         ImVec2 wsize = ImGui::GetWindowSize();
-        ImGui::Image((void*) (intptr_t) bloomRenderer->GetBloomTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::Image((void*) (intptr_t) postProcessingColorBuffers[1], wsize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::Image((void*) (intptr_t) depthMapDirectional, wsize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::Image((void*) (intptr_t) ssaoColorBuffer, wsize, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::Image((void*) (intptr_t) gPosition, wsize, ImVec2(0, 1), ImVec2(1, 0));
