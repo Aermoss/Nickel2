@@ -42,8 +42,8 @@ namespace Nickel2 {
     }
 
     void OpenGLContext::CheckErrors() {
-        int32_t error = glGetError();
-        NK_CORE_ASSERT(!error, Utils::GetErrorString(error));
+        /* int32_t error = glGetError();
+        NK_CORE_ASSERT(!error, Utils::GetErrorString(error)); */
     }
 
     void OpenGLContext::SwapBuffers() {

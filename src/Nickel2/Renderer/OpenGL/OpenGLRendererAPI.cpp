@@ -5,22 +5,55 @@
 
 namespace Nickel2 {
     namespace Utils {
-        void MessageCallback(unsigned source, unsigned type, unsigned id, unsigned severity, int length, const char* message, const void* userParam) {
+        const char* GetSource(int source) {
+            switch (source) {
+                case GL_DEBUG_SOURCE_API: return "API";
+                case GL_DEBUG_SOURCE_WINDOW_SYSTEM: return "Window System";
+                case GL_DEBUG_SOURCE_SHADER_COMPILER: return "Shader Compiler";
+                case GL_DEBUG_SOURCE_THIRD_PARTY: return "Third Party";
+                case GL_DEBUG_SOURCE_APPLICATION: return "Application";
+                case GL_DEBUG_SOURCE_OTHER: return "Other";
+                default: return "Unknown";
+            }
+        }
+
+        const char* GetType(int type) {
+            switch (type) {
+                case GL_DEBUG_TYPE_ERROR: return "Error";
+                case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "Deprecated Behavior";
+                case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: return "Undefined Behavior";
+                case GL_DEBUG_TYPE_PORTABILITY: return "Portability";
+                case GL_DEBUG_TYPE_PERFORMANCE: return "Performance";
+                case GL_DEBUG_TYPE_MARKER: return "Marker";
+                case GL_DEBUG_TYPE_PUSH_GROUP: return "Push Group";
+                case GL_DEBUG_TYPE_POP_GROUP: return "Pop Group";
+                case GL_DEBUG_TYPE_OTHER: return "Other";
+                default: return "Unknown";
+            }
+        }
+        
+        const char* GetSeverity(int severity) {
             switch (severity) {
-                case GL_DEBUG_SEVERITY_HIGH: break;
-                case GL_DEBUG_SEVERITY_MEDIUM: break;
-                case GL_DEBUG_SEVERITY_LOW: break;
-                case GL_DEBUG_SEVERITY_NOTIFICATION: break;
-                default: break;
-            } return;
+                case GL_DEBUG_SEVERITY_HIGH: return "High";
+                case GL_DEBUG_SEVERITY_MEDIUM: return "Medium";
+                case GL_DEBUG_SEVERITY_LOW: return "Low";
+                case GL_DEBUG_SEVERITY_NOTIFICATION: return "Notification";
+                default: return "Unknown";
+            }
+        }
+
+        void APIENTRY MessageCallback(uint32_t source, uint32_t type, uint32_t id, uint32_t severity, int length, const char* message, const void* userParam) {
+            Logger::Log(Logger::Level::Error, "OpenGL", (std::string(message) + ".").c_str());
         }
     }
 
     void OpenGLRendererAPI::Initialize() {
+#if defined(NK_DEBUG)
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
         glDebugMessageCallback(Utils::MessageCallback, nullptr);
-        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+#endif
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_LINE_SMOOTH);
