@@ -1,10 +1,10 @@
 #version 460
 
 out vec4 fragColor;
+
 in vec3 fragPosition;
 
 uniform sampler2D equirectangularMap;
-
 const vec2 invAtan = vec2(0.1591f, 0.3183f);
 
 vec2 SampleSphericalMap(vec3 v) {

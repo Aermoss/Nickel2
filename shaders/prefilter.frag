@@ -1,12 +1,12 @@
 #version 460
 
+const float PI = 3.14159265359f;
+
 out vec4 fragColor;
 in vec3 fragPosition;
 
 uniform samplerCube environmentMap;
 uniform float roughness;
-
-const float PI = 3.14159265359f;
 
 float distributionGGX(vec3 N, vec3 H, float roughness) {
     float a = roughness * roughness;

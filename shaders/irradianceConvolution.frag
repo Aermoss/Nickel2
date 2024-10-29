@@ -1,11 +1,11 @@
 #version 460
 
+const float PI = 3.14159265359f;
+
 out vec4 fragColor;
 in vec3 fragPosition;
 
 uniform samplerCube environmentMap;
-
-const float PI = 3.14159265359f;
 
 void main() {
     vec3 N = normalize(fragPosition);
