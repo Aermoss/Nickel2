@@ -159,8 +159,8 @@ namespace Nickel2 {
         delete mesh;
     }
 
-    CameraComponent::CameraComponent(Entity* entity, Window* window, float fov, float nearPlane, float farPlane, uint32_t flags) {
-        camera = new Camera(entity, window, fov, nearPlane, farPlane, flags);
+    CameraComponent::CameraComponent(Entity* entity, float fov, float nearPlane, float farPlane, uint32_t flags) {
+        camera = new Camera(entity, fov, nearPlane, farPlane, flags);
     }
 
     CameraComponent::~CameraComponent() {}
