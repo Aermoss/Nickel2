@@ -54,7 +54,6 @@ JPH_IMPLEMENT_SERIALIZABLE_VIRTUAL(MeshShapeSettings)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mMaterials)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mMaxTrianglesPerLeaf)
 	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mActiveEdgeCosThresholdAngle)
-	JPH_ADD_ATTRIBUTE(MeshShapeSettings, mPerTriangleUserData)
 }
 
 // Codecs this mesh shape is using
@@ -200,7 +199,7 @@ MeshShape::MeshShape(const MeshShapeSettings &inSettings, ShapeResult &outResult
 	// Convert to buffer
 	AABBTreeToBuffer<TriangleCodec, NodeCodec> buffer;
 	const char *error = nullptr;
-	if (!buffer.Convert(inSettings.mTriangleVertices, root, inSettings.mPerTriangleUserData, error))
+	if (!buffer.Convert(inSettings.mTriangleVertices, root, error))
 	{
 		outResult.SetError(error);
 		delete root;
@@ -343,15 +342,7 @@ void MeshShape::sFindActiveEdges(const MeshShapeSettings &inSettings, IndexedTri
 
 MassProperties MeshShape::GetMassProperties() const
 {
-	// We cannot calculate the volume for an arbitrary mesh, so we return invalid mass properties.
-	// If you want your mesh to be dynamic, then you should provide the mass properties yourself when
-	// creating a Body:
-	//
-	// BodyCreationSettings::mOverrideMassProperties = EOverrideMassProperties::MassAndInertiaProvided;
-	// BodyCreationSettings::mMassPropertiesOverride.SetMassAndInertiaOfSolidBox(Vec3::sReplicate(1.0f), 1000.0f);
-	//
-	// Note that for a mesh shape to simulate properly, it is best if the mesh is manifold
-	// (i.e. closed, all edges shared by only two triangles, consistent winding order).
+	// Object should always be static, return default mass properties
 	return MassProperties();
 }
 
@@ -781,7 +772,7 @@ void MeshShape::CastRay(const RayCast &inRay, const RayCastSettings &inRayCastSe
 	};
 
 	Visitor visitor(ioCollector);
-	visitor.mBackFaceMode = inRayCastSettings.mBackFaceModeTriangles;
+	visitor.mBackFaceMode = inRayCastSettings.mBackFaceMode;
 	visitor.mRayOrigin = inRay.mOrigin;
 	visitor.mRayDirection = inRay.mDirection;
 	visitor.mRayInvDirection.Set(inRay.mDirection);
@@ -793,7 +784,7 @@ void MeshShape::CollidePoint(Vec3Arg inPoint, const SubShapeIDCreator &inSubShap
 	sCollidePointUsingRayCast(*this, inPoint, inSubShapeIDCreator, ioCollector, inShapeFilter);
 }
 
-void MeshShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, const CollideSoftBodyVertexIterator &inVertices, uint inNumVertices, int inCollidingShapeIndex) const
+void MeshShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Arg inScale, SoftBodyVertex *ioVertices, uint inNumVertices, [[maybe_unused]] float inDeltaTime, [[maybe_unused]] Vec3Arg inDisplacementDueToGravity, int inCollidingShapeIndex) const
 {
 	JPH_PROFILE_FUNCTION();
 
@@ -830,12 +821,12 @@ void MeshShape::CollideSoftBodyVertices(Mat44Arg inCenterOfMassTransform, Vec3Ar
 
 	Visitor visitor(inCenterOfMassTransform, inScale);
 
-	for (CollideSoftBodyVertexIterator v = inVertices, sbv_end = inVertices + inNumVertices; v != sbv_end; ++v)
-		if (v.GetInvMass() > 0.0f)
+	for (SoftBodyVertex *v = ioVertices, *sbv_end = ioVertices + inNumVertices; v < sbv_end; ++v)
+		if (v->mInvMass > 0.0f)
 		{
-			visitor.StartVertex(v);
+			visitor.StartVertex(*v);
 			WalkTreePerTriangle(SubShapeIDCreator(), visitor);
-			visitor.FinishVertex(v, inCollidingShapeIndex);
+			visitor.FinishVertex(*v, inCollidingShapeIndex);
 		}
 }
 
@@ -1228,18 +1219,6 @@ Shape::Stats MeshShape::GetStats() const
 	WalkTree(visitor);
 
 	return Stats(sizeof(*this) + mMaterials.size() * sizeof(Ref<PhysicsMaterial>) + mTree.size() * sizeof(uint8), visitor.mNumTriangles);
-}
-
-uint32 MeshShape::GetTriangleUserData(const SubShapeID &inSubShapeID) const
-{
-	// Decode ID
-	const void *block_start;
-	uint32 triangle_idx;
-	DecodeSubShapeID(inSubShapeID, block_start, triangle_idx);
-
-	// Decode triangle
-	const TriangleCodec::DecodingContext triangle_ctx(sGetTriangleHeader(mTree));
-	return triangle_ctx.GetUserData(block_start, triangle_idx);
 }
 
 void MeshShape::sRegister()

@@ -39,18 +39,6 @@ public:
 		return inVertex.mHasContact? mCollidingShapes[inVertex.mCollidingShapeIndex].mBodyID : BodyID();
 	}
 
-	/// Get the number of sensors that are in contact with the soft body
-	JPH_INLINE uint					GetNumSensorContacts() const
-	{
-		return (uint)mCollidingSensors.size();
-	}
-
-	/// Get the i-th sensor that is in contact with the soft body
-	JPH_INLINE BodyID				GetSensorContactBodyID(uint inIndex) const
-	{
-		return mCollidingSensors[inIndex].mBodyID;
-	}
-
 private:
 	/// Allow SoftBodyMotionProperties to construct us
 	friend class SoftBodyMotionProperties;
@@ -58,17 +46,14 @@ private:
 	/// Constructor
 	explicit						SoftBodyManifold(const SoftBodyMotionProperties *inMotionProperties) :
 										mVertices(inMotionProperties->mVertices),
-										mCollidingShapes(inMotionProperties->mCollidingShapes),
-										mCollidingSensors(inMotionProperties->mCollidingSensors)
+										mCollidingShapes(inMotionProperties->mCollidingShapes)
 	{
 	}
 
 	using CollidingShape = SoftBodyMotionProperties::CollidingShape;
-	using CollidingSensor = SoftBodyMotionProperties::CollidingSensor;
 
 	const Array<SoftBodyVertex> &	mVertices;
 	const Array<CollidingShape>	&	mCollidingShapes;
-	const Array<CollidingSensor> &	mCollidingSensors;
 };
 
 JPH_NAMESPACE_END

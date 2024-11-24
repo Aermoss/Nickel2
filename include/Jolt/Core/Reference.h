@@ -59,7 +59,6 @@ public:
 
 	inline void				Release() const
 	{
-	#ifndef JPH_TSAN_ENABLED
 		// Releasing a reference must use release semantics...
 		if (mRefCount.fetch_sub(1, memory_order_release) == 1)
 		{
@@ -67,11 +66,6 @@ public:
 			atomic_thread_fence(memory_order_acquire);
 			delete static_cast<const T *>(this);
 		}
-	#else
-		// But under TSAN, we cannot use atomic_thread_fence, so we use an acq_rel operation unconditionally instead
-		if (mRefCount.fetch_sub(1, memory_order_acq_rel) == 1)
-			delete static_cast<const T *>(this);
-	#endif
 	}
 
 	/// INTERNAL HELPER FUNCTION USED BY SERIALIZATION

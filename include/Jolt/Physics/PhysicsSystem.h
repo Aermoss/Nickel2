@@ -48,8 +48,7 @@ public:
 	void						SetBodyActivationListener(BodyActivationListener *inListener) { mBodyManager.SetBodyActivationListener(inListener); }
 	BodyActivationListener *	GetBodyActivationListener() const							{ return mBodyManager.GetBodyActivationListener(); }
 
-	/// Listener that is notified whenever a contact point between two bodies is added/updated/removed.
-	/// You can't change contact listener during PhysicsSystem::Update but it can be changed at any other time.
+	/// Listener that is notified whenever a contact point between two bodies is added/updated/removed
 	void						SetContactListener(ContactListener *inListener)				{ mContactManager.SetContactListener(inListener); }
 	ContactListener *			GetContactListener() const									{ return mContactManager.GetContactListener(); }
 
@@ -90,21 +89,16 @@ public:
 	/// Remove constraint from the world
 	void						RemoveConstraint(Constraint *inConstraint)					{ mConstraintManager.Remove(&inConstraint, 1); }
 
-	/// Batch add constraints.
+	/// Batch add constraints. Note that the inConstraints array is allowed to have nullptrs, these will be ignored.
 	void						AddConstraints(Constraint **inConstraints, int inNumber)	{ mConstraintManager.Add(inConstraints, inNumber); }
 
-	/// Batch remove constraints.
+	/// Batch remove constraints. Note that the inConstraints array is allowed to have nullptrs, these will be ignored.
 	void						RemoveConstraints(Constraint **inConstraints, int inNumber)	{ mConstraintManager.Remove(inConstraints, inNumber); }
 
 	/// Get a list of all constraints
 	Constraints					GetConstraints() const										{ return mConstraintManager.GetConstraints(); }
 
 	/// Optimize the broadphase, needed only if you've added many bodies prior to calling Update() for the first time.
-	/// Don't call this every frame as PhysicsSystem::Update spreads out the same work over multiple frames.
-	/// If you add many bodies through BodyInterface::AddBodiesPrepare/AddBodiesFinalize and if the bodies in a batch are
-	/// in a roughly unoccupied space (e.g. a new level section) then a call to OptimizeBroadPhase is also not needed
-	/// as batch adding creates an efficient bounding volume hierarchy.
-	/// Don't call this function while bodies are being modified from another thread or use the locking BodyInterface to modify bodies.
 	void						OptimizeBroadPhase();
 
 	/// Adds a new step listener
@@ -123,7 +117,7 @@ public:
 	void						SaveState(StateRecorder &inStream, EStateRecorderState inState = EStateRecorderState::All, const StateRecorderFilter *inFilter = nullptr) const;
 
 	/// Restoring state for replay. Returns false if failed.
-	bool						RestoreState(StateRecorder &inStream, const StateRecorderFilter *inFilter = nullptr);
+	bool						RestoreState(StateRecorder &inStream);
 
 	/// Saving state of a single body.
 	void						SaveBodyState(const Body &inBody, StateRecorder &inStream) const;

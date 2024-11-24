@@ -13,7 +13,6 @@ JPH_NAMESPACE_BEGIN
 /// TriangleBlockHeader,
 /// TriangleBlock (4 triangles and their flags in 16 bytes),
 /// TriangleBlock...
-/// [Optional] UserData (4 bytes per triangle)
 ///
 /// Vertices are stored:
 ///
@@ -78,22 +77,13 @@ public:
 
 	static_assert(sizeof(TriangleBlock) == 16, "Compiler added padding");
 
-	enum ETriangleBlockHeaderFlags : uint32
-	{
-		OFFSET_TO_VERTICES_BITS = 29,							///< Offset from current block to start of vertices in bytes
-		OFFSET_TO_VERTICES_MASK = (1 << OFFSET_TO_VERTICES_BITS) - 1,
-		OFFSET_TO_USERDATA_BITS = 3,							///< When user data is stored, this is the number of blocks to skip to get to the user data (0 = no user data)
-		OFFSET_TO_USERDATA_MASK = (1 << OFFSET_TO_USERDATA_BITS) - 1,
-	};
-
 	/// A triangle header, will be followed by one or more TriangleBlocks
 	struct TriangleBlockHeader
 	{
-		const VertexData *			GetVertexData() const		{ return reinterpret_cast<const VertexData *>(reinterpret_cast<const uint8 *>(this) + (mFlags & OFFSET_TO_VERTICES_MASK)); }
+		const VertexData *			GetVertexData() const		{ return reinterpret_cast<const VertexData *>(reinterpret_cast<const uint8 *>(this) + mOffsetToVertices); }
 		const TriangleBlock *		GetTriangleBlock() const	{ return reinterpret_cast<const TriangleBlock *>(reinterpret_cast<const uint8 *>(this) + sizeof(TriangleBlockHeader)); }
-		const uint32 *				GetUserData() const			{ uint32 offset = mFlags >> OFFSET_TO_VERTICES_BITS; return offset == 0? nullptr : reinterpret_cast<const uint32 *>(GetTriangleBlock() + offset); }
 
-		uint32						mFlags;
+		uint32						mOffsetToVertices;			///< Offset from current block to start of vertices in bytes
 	};
 
 	static_assert(sizeof(TriangleBlockHeader) == 4, "Compiler added padding");
@@ -141,15 +131,15 @@ public:
 		}
 
 		/// Get an upper bound on the amount of bytes needed to store inTriangleCount triangles
-		uint						GetPessimisticMemoryEstimate(uint inTriangleCount, bool inStoreUserData) const
+		uint						GetPessimisticMemoryEstimate(uint inTriangleCount) const
 		{
 			// Worst case each triangle is alone in a block, none of the vertices are shared and we need to add 3 bytes to align the vertices
-			return inTriangleCount * (sizeof(TriangleBlockHeader) + sizeof(TriangleBlock) + (inStoreUserData? sizeof(uint32) : 0) + 3 * sizeof(VertexData)) + 3;
+			return inTriangleCount * (sizeof(TriangleBlockHeader) + sizeof(TriangleBlock) + 3 * sizeof(VertexData)) + 3;
 		}
 
 		/// Pack the triangles in inContainer to ioBuffer. This stores the mMaterialIndex of a triangle in the 8 bit flags.
 		/// Returns uint(-1) on error.
-		uint						Pack(const IndexedTriangleList &inTriangles, bool inStoreUserData, ByteBuffer &ioBuffer, const char *&outError)
+		uint						Pack(const IndexedTriangleList &inTriangles, ByteBuffer &ioBuffer, const char *&outError)
 		{
 			// Determine position of triangles start
 			uint offset = (uint)ioBuffer.size();
@@ -165,20 +155,11 @@ public:
 			uint start_vertex = Clamp((int)mVertices.size() - 256 + (int)tri_count * 3, 0, (int)mVertices.size());
 
 			// Store the start vertex offset, this will later be patched to give the delta offset relative to the triangle block
-			mOffsetsToPatch.push_back(uint((uint8 *)&header->mFlags - &ioBuffer[0]));
-			header->mFlags = start_vertex * sizeof(VertexData);
-			JPH_ASSERT(header->mFlags <= OFFSET_TO_VERTICES_MASK, "Offset to vertices doesn't fit");
-
-			// When we store user data we need to store the offset to the user data in TriangleBlocks
-			uint padded_triangle_count = AlignUp(tri_count, 4);
-			if (inStoreUserData)
-			{
-				uint32 num_blocks = padded_triangle_count >> 2;
-				JPH_ASSERT(num_blocks <= OFFSET_TO_USERDATA_MASK);
-				header->mFlags |= num_blocks << OFFSET_TO_VERTICES_BITS;
-			}
+			mOffsetsToPatch.push_back(uint((uint8 *)&header->mOffsetToVertices - &ioBuffer[0]));
+			header->mOffsetToVertices = start_vertex * sizeof(VertexData);
 
 			// Pack vertices
+			uint padded_triangle_count = AlignUp(tri_count, 4);
 			for (uint t = 0; t < padded_triangle_count; t += 4)
 			{
 				TriangleBlock *block = ioBuffer.Allocate<TriangleBlock>();
@@ -218,14 +199,6 @@ public:
 					}
 			}
 
-			// Store user data
-			if (inStoreUserData)
-			{
-				uint32 *user_data = ioBuffer.Allocate<uint32>(tri_count);
-				for (uint t = 0; t < tri_count; ++t)
-					user_data[t] = inTriangles[t].mUserData;
-			}
-
 			return offset;
 		}
 
@@ -241,13 +214,7 @@ public:
 
 			// Patch the offsets
 			for (uint o : mOffsetsToPatch)
-			{
-				uint32 *flags = ioBuffer.Get<uint32>(o);
-				uint32 delta = vertices_idx - o;
-				if ((*flags & OFFSET_TO_VERTICES_MASK) + delta > OFFSET_TO_VERTICES_MASK)
-					JPH_ASSERT(false, "Offset to vertices doesn't fit");
-				*flags += delta;
-			}
+				*ioBuffer.Get<uint32>(o) += vertices_idx - o;
 
 			// Calculate bounding box
 			AABox bounds;
@@ -440,14 +407,6 @@ public:
 			outV1 = trans.GetAxisX();
 			outV2 = trans.GetAxisY();
 			outV3 = trans.GetAxisZ();
-		}
-
-		/// Get user data for a triangle
-		JPH_INLINE uint32			GetUserData(const void *inTriangleStart, uint32 inTriangleIdx) const
-		{
-			const TriangleBlockHeader *header = reinterpret_cast<const TriangleBlockHeader *>(inTriangleStart);
-			const uint32 *user_data = header->GetUserData();
-			return user_data != nullptr? user_data[inTriangleIdx] : 0;
 		}
 
 		/// Get flags for entire triangle block

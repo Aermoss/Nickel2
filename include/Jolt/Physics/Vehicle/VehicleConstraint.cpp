@@ -157,13 +157,13 @@ RMat44 VehicleConstraint::GetWheelWorldTransform(uint inWheelIndex, Vec3Arg inWh
 	return mBody->GetWorldTransform() * GetWheelLocalTransform(inWheelIndex, inWheelRight, inWheelUp);
 }
 
-void VehicleConstraint::OnStep(const PhysicsStepListenerContext &inContext)
+void VehicleConstraint::OnStep(float inDeltaTime, PhysicsSystem &inPhysicsSystem)
 {
 	JPH_PROFILE_FUNCTION();
 
 	// Callback to higher-level systems. We do it before PreCollide, in case steering changes.
 	if (mPreStepCallback != nullptr)
-		mPreStepCallback(*this, inContext);
+		mPreStepCallback(*this, inDeltaTime, inPhysicsSystem);
 
 	if (mIsGravityOverridden)
 	{
@@ -181,11 +181,11 @@ void VehicleConstraint::OnStep(const PhysicsStepListenerContext &inContext)
 	else
 	{
 		// Calculate new world up vector by inverting gravity
-		mWorldUp = (-inContext.mPhysicsSystem->GetGravity()).NormalizedOr(mWorldUp);
+		mWorldUp = (-inPhysicsSystem.GetGravity()).NormalizedOr(mWorldUp);
 	}
 
 	// Callback on our controller
-	mController->PreCollide(inContext.mDeltaTime, *inContext.mPhysicsSystem);
+	mController->PreCollide(inDeltaTime, inPhysicsSystem);
 
 	// Calculate if this constraint is active by checking if our main vehicle body is active or any of the bodies we touch are active
 	mIsActive = mBody->IsActive();
@@ -213,7 +213,7 @@ void VehicleConstraint::OnStep(const PhysicsStepListenerContext &inContext)
 			if (!w->mContactBodyID.IsInvalid())
 			{
 				// Test if the body is still valid
-				w->mContactBody = inContext.mPhysicsSystem->GetBodyLockInterfaceNoLock().TryGetBody(w->mContactBodyID);
+				w->mContactBody = inPhysicsSystem.GetBodyLockInterfaceNoLock().TryGetBody(w->mContactBodyID);
 				if (w->mContactBody == nullptr)
 				{
 					// It's not, forget the contact
@@ -224,7 +224,7 @@ void VehicleConstraint::OnStep(const PhysicsStepListenerContext &inContext)
 				else
 				{
 					// Extrapolate the wheel contact properties
-					mVehicleCollisionTester->PredictContactProperties(*inContext.mPhysicsSystem, *this, wheel_index, ws_origin, ws_direction, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mSuspensionLength);
+					mVehicleCollisionTester->PredictContactProperties(inPhysicsSystem, *this, wheel_index, ws_origin, ws_direction, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mSuspensionLength);
 				}
 			}
 		}
@@ -237,7 +237,7 @@ void VehicleConstraint::OnStep(const PhysicsStepListenerContext &inContext)
 			w->mSuspensionLength = settings->mSuspensionMaxLength;
 
 			// Test collision to find the floor
-			if (mVehicleCollisionTester->Collide(*inContext.mPhysicsSystem, *this, wheel_index, ws_origin, ws_direction, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mSuspensionLength))
+			if (mVehicleCollisionTester->Collide(inPhysicsSystem, *this, wheel_index, ws_origin, ws_direction, mBody->GetID(), w->mContactBody, w->mContactSubShapeID, w->mContactPosition, w->mContactNormal, w->mSuspensionLength))
 			{
 				// Store ID (pointer is not valid outside of the simulation step)
 				w->mContactBodyID = w->mContactBody->GetID();
@@ -278,7 +278,7 @@ void VehicleConstraint::OnStep(const PhysicsStepListenerContext &inContext)
 
 	// Callback to higher-level systems. We do it immediately after wheel collision.
 	if (mPostCollideCallback != nullptr)
-		mPostCollideCallback(*this, inContext);
+		mPostCollideCallback(*this, inDeltaTime, inPhysicsSystem);
 
 	// Calculate anti-rollbar impulses
 	for (const VehicleAntiRollBar &r : mAntiRollBars)
@@ -290,7 +290,7 @@ void VehicleConstraint::OnStep(const PhysicsStepListenerContext &inContext)
 		{
 			// Calculate the impulse to apply based on the difference in suspension length
 			float difference = rw->mSuspensionLength - lw->mSuspensionLength;
-			float impulse = difference * r.mStiffness * inContext.mDeltaTime;
+			float impulse = difference * r.mStiffness * inDeltaTime;
 			lw->mAntiRollBarImpulse = -impulse;
 			rw->mAntiRollBarImpulse = impulse;
 		}
@@ -302,11 +302,11 @@ void VehicleConstraint::OnStep(const PhysicsStepListenerContext &inContext)
 	}
 
 	// Callback on our controller
-	mController->PostCollide(inContext.mDeltaTime, *inContext.mPhysicsSystem);
+	mController->PostCollide(inDeltaTime, inPhysicsSystem);
 
 	// Callback to higher-level systems. We do it before the sleep section, in case velocities change.
 	if (mPostStepCallback != nullptr)
-		mPostStepCallback(*this, inContext);
+		mPostStepCallback(*this, inDeltaTime, inPhysicsSystem);
 
 	// If the wheels are rotating, we don't want to go to sleep yet
 	bool allow_sleep = mController->AllowSleep();

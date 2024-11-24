@@ -8,7 +8,7 @@
 
 JPH_NAMESPACE_BEGIN
 
-class JPH_EXPORT BodyAccess
+class BodyAccess
 {
 public:
 	/// Access rules, used to detect race conditions during simulation
@@ -25,42 +25,29 @@ public:
 	public:
 		inline							Grant(EAccess inVelocity, EAccess inPosition)
 		{
-			EAccess &velocity = sVelocityAccess();
-			EAccess &position = sPositionAccess();
+			JPH_ASSERT(sVelocityAccess == EAccess::ReadWrite);
+			JPH_ASSERT(sPositionAccess == EAccess::ReadWrite);
 
-			JPH_ASSERT(velocity == EAccess::ReadWrite);
-			JPH_ASSERT(position == EAccess::ReadWrite);
-
-			velocity = inVelocity;
-			position = inPosition;
+			sVelocityAccess = inVelocity;
+			sPositionAccess = inPosition;
 		}
 
 		inline							~Grant()
 		{
-			sVelocityAccess() = EAccess::ReadWrite;
-			sPositionAccess() = EAccess::ReadWrite;
+			sVelocityAccess = EAccess::ReadWrite;
+			sPositionAccess = EAccess::ReadWrite;
 		}
 	};
 
 	/// Check if we have permission
-	static inline bool					sCheckRights(EAccess inRights, EAccess inDesiredRights)
+	static bool							sCheckRights(EAccess inRights, EAccess inDesiredRights)
 	{
 		return (uint8(inRights) & uint8(inDesiredRights)) == uint8(inDesiredRights);
 	}
 
-	/// Access to read/write velocities
-	static inline EAccess &				sVelocityAccess()
-	{
-		static thread_local EAccess sAccess = BodyAccess::EAccess::ReadWrite;
-		return sAccess;
-	}
-
-	/// Access to read/write positions
-	static inline EAccess &				sPositionAccess()
-	{
-		static thread_local EAccess sAccess = BodyAccess::EAccess::ReadWrite;
-		return sAccess;
-	}
+	// Various permissions that can be granted
+	static thread_local EAccess			sVelocityAccess;
+	static thread_local EAccess			sPositionAccess;
 };
 
 JPH_NAMESPACE_END

@@ -251,7 +251,7 @@ public:
 	void						SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const;
 
 	/// Restoring state for replay. Returns false when failed.
-	bool						RestoreState(StateRecorder &inStream, const StateRecorderFilter *inFilter);
+	bool						RestoreState(StateRecorder &inStream);
 
 private:
 	/// Local space contact point, used for caching impulses
@@ -393,7 +393,7 @@ private:
 
 		/// Saving / restoring state for replay
 		void					SaveState(StateRecorder &inStream, const StateRecorderFilter *inFilter) const;
-		bool					RestoreState(const ManifoldCache &inReadCache, StateRecorder &inStream, const StateRecorderFilter *inFilter);
+		bool					RestoreState(const ManifoldCache &inReadCache, StateRecorder &inStream);
 
 	private:
 		/// Block size used when allocating new blocks in the contact cache

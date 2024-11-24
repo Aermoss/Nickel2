@@ -309,9 +309,7 @@ void QuadTree::UpdatePrepare(const BodyVector &inBodies, TrackingVector &ioTrack
 						}
 						else
 						{
-							JPH_ASSERT(false, "Stack full!\n"
-								"This must be a very deep tree. Are you batch adding bodies through BodyInterface::AddBodiesPrepare/AddBodiesFinalize?\n"
-								"If you add lots of bodies through BodyInterface::AddBody you may need to call PhysicsSystem::OptimizeBroadPhase to rebuild the tree.");
+							JPH_ASSERT(false); // Out of stack space, this must be a very deep tree. Are you batch adding bodies to the broadphase?
 
 							// Falling back to adding the node as a whole
 							*cur_node_id = child_node_id;
@@ -1022,9 +1020,7 @@ JPH_INLINE void QuadTree::WalkTree(const ObjectLayerFilter &inObjectLayerFilter,
 				top += num_results;
 			}
 			else
-				JPH_ASSERT(false, "Stack full!\n"
-					"This must be a very deep tree. Are you batch adding bodies through BodyInterface::AddBodiesPrepare/AddBodiesFinalize?\n"
-					"If you add lots of bodies through BodyInterface::AddBody you may need to call PhysicsSystem::OptimizeBroadPhase to rebuild the tree.");
+				JPH_ASSERT(false, "Stack full!");
 		}
 
 		// Fetch next node until we find one that the visitor wants to see
@@ -1446,9 +1442,7 @@ void QuadTree::FindCollidingPairs(const BodyVector &inBodies, const BodyID *inAc
 						top += num_results;
 					}
 					else
-						JPH_ASSERT(false, "Stack full!\n"
-							"This must be a very deep tree. Are you batch adding bodies through BodyInterface::AddBodiesPrepare/AddBodiesFinalize?\n"
-							"If you add lots of bodies through BodyInterface::AddBody you may need to call PhysicsSystem::OptimizeBroadPhase to rebuild the tree.");
+						JPH_ASSERT(false, "Stack full!");
 				}
 			}
 			--top;

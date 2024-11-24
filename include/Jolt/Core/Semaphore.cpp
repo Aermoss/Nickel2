@@ -9,9 +9,7 @@
 #ifdef JPH_PLATFORM_WINDOWS
 	JPH_SUPPRESS_WARNING_PUSH
 	JPH_MSVC_SUPPRESS_WARNING(5039) // winbase.h(13179): warning C5039: 'TpSetCallbackCleanupGroup': pointer or reference to potentially throwing function passed to 'extern "C"' function under -EHc. Undefined behavior may occur if this function throws an exception.
-	#ifndef WIN32_LEAN_AND_MEAN
-		#define WIN32_LEAN_AND_MEAN
-	#endif
+	#define WIN32_LEAN_AND_MEAN
 #ifndef JPH_COMPILER_MINGW
 	#include <Windows.h>
 #else
@@ -51,7 +49,7 @@ void Semaphore::Release(uint inNumber)
 	}
 #else
 	std::lock_guard lock(mLock);
-	mCount.fetch_add(inNumber, std::memory_order_relaxed);
+	mCount += (int)inNumber;
 	if (inNumber > 1)
 		mWaitVariable.notify_all();
 	else
@@ -74,7 +72,7 @@ void Semaphore::Acquire(uint inNumber)
 	}
 #else
 	std::unique_lock lock(mLock);
-	mCount.fetch_sub(inNumber, std::memory_order_relaxed);
+	mCount -= (int)inNumber;
 	mWaitVariable.wait(lock, [this]() { return mCount >= 0; });
 #endif
 }

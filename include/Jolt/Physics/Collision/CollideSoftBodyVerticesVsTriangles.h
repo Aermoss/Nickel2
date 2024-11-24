@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <Jolt/Physics/Collision/CollideSoftBodyVertexIterator.h>
+#include <Jolt/Physics/SoftBody/SoftBodyVertex.h>
 #include <Jolt/Geometry/ClosestPoint.h>
 
 JPH_NAMESPACE_BEGIN
@@ -20,9 +20,9 @@ public:
 	{
 	}
 
-	JPH_INLINE void		StartVertex(const CollideSoftBodyVertexIterator &inVertex)
+	JPH_INLINE void		StartVertex(const SoftBodyVertex &inVertex)
 	{
-		mLocalPosition = mInvTransform * inVertex.GetPosition();
+		mLocalPosition = mInvTransform * inVertex.mPosition;
 		mClosestDistanceSq = FLT_MAX;
 	}
 
@@ -43,7 +43,7 @@ public:
 		}
 	}
 
-	JPH_INLINE void		FinishVertex(const CollideSoftBodyVertexIterator &ioVertex, int inCollidingShapeIndex) const
+	JPH_INLINE void		FinishVertex(SoftBodyVertex &ioVertex, int inCollidingShapeIndex) const
 	{
 		if (mClosestDistanceSq < FLT_MAX)
 		{
@@ -57,21 +57,29 @@ public:
 			{
 				// Closest is interior to the triangle, use plane as collision plane but don't allow more than 0.1 m penetration
 				// because otherwise a triangle half a level a way will have a huge penetration if it is back facing
-				float penetration = min(triangle_normal.Dot(v0 - ioVertex.GetPosition()), 0.1f);
-				if (ioVertex.UpdatePenetration(penetration))
-					ioVertex.SetCollision(Plane::sFromPointAndNormal(v0, triangle_normal), inCollidingShapeIndex);
+				float penetration = min(triangle_normal.Dot(v0 - ioVertex.mPosition), 0.1f);
+				if (penetration > ioVertex.mLargestPenetration)
+				{
+					ioVertex.mLargestPenetration = penetration;
+					ioVertex.mCollisionPlane = Plane::sFromPointAndNormal(v0, triangle_normal);
+					ioVertex.mCollidingShapeIndex = inCollidingShapeIndex;
+				}
 			}
 			else
 			{
 				// Closest point is on an edge or vertex, use closest point as collision plane
 				Vec3 closest_point = mTransform * (mLocalPosition + mClosestPoint);
-				Vec3 normal = ioVertex.GetPosition() - closest_point;
+				Vec3 normal = ioVertex.mPosition - closest_point;
 				if (normal.Dot(triangle_normal) > 0.0f) // Ignore back facing edges
 				{
 					float normal_length = normal.Length();
 					float penetration = -normal_length;
-					if (ioVertex.UpdatePenetration(penetration))
-						ioVertex.SetCollision(Plane::sFromPointAndNormal(closest_point, normal_length > 0.0f? normal / normal_length : triangle_normal), inCollidingShapeIndex);
+					if (penetration > ioVertex.mLargestPenetration)
+					{
+						ioVertex.mLargestPenetration = penetration;
+						ioVertex.mCollisionPlane = Plane::sFromPointAndNormal(closest_point, normal_length > 0.0f? normal / normal_length : triangle_normal);
+						ioVertex.mCollidingShapeIndex = inCollidingShapeIndex;
+					}
 				}
 			}
 		}
