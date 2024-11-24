@@ -2,6 +2,9 @@
 #include <Nickel2/Scene/Component.hpp>
 #include <Nickel2/Scene/Entity.hpp>
 
+#include <Nickel2/Physics/PhysicsSystem.hpp>
+#include <Nickel2/Physics/PhysicsScene.hpp>
+
 namespace Nickel2 {
     IDComponent::IDComponent(Entity* entity, uint64_t id) : id(id) {}
     IDComponent::~IDComponent() {}
@@ -141,58 +144,72 @@ namespace Nickel2 {
         submesh = new Submesh(entity, vertices, indices, material);
     }
 
-    SubmeshComponent::~SubmeshComponent() {}
-
-    void SubmeshComponent::Destroy() {
-        submesh->Destroy();
-        delete submesh;
+    SubmeshComponent::~SubmeshComponent() {
+        if (submesh != nullptr) {
+            submesh->Destroy();
+            delete submesh;
+            submesh = nullptr;
+        }
     }
 
     MeshComponent::MeshComponent(Entity* entity, const std::string& path) {
         mesh = new Mesh(entity, path);
     }
 
-    MeshComponent::~MeshComponent() {}
-
-    void MeshComponent::Destroy() {
-        mesh->Destroy();
-        delete mesh;
+    MeshComponent::~MeshComponent() {
+        if (mesh != nullptr) {
+            mesh->Destroy();
+            delete mesh;
+            mesh = nullptr;
+        }
     }
 
     CameraComponent::CameraComponent(Entity* entity, float fov, float nearPlane, float farPlane, uint32_t flags) {
         camera = new Camera(entity, fov, nearPlane, farPlane, flags);
     }
 
-    CameraComponent::~CameraComponent() {}
-
-    void CameraComponent::Destroy() {
-        camera->Destroy();
-        delete camera;
+    CameraComponent::~CameraComponent() {
+        if (camera != nullptr) {
+            delete camera;
+            camera = nullptr;
+        }
     }
 
     ListenerComponent::ListenerComponent(Entity* entity, DistanceModel distanceModel) {
-        listener = new Listener(entity, distanceModel);
+        listener = AudioListener::Create(entity, distanceModel);
     }
 
-    ListenerComponent::~ListenerComponent() {}
-
-    void ListenerComponent::Destroy() {
-        listener->Destroy();
-        delete listener;
+    ListenerComponent::~ListenerComponent() {
+        if (listener != nullptr)
+            listener = nullptr;
     }
 
-    SourceComponent::SourceComponent(Entity* entity, Listener* listener, const char* filePath, bool looping, float gain, float pitch, float rollOffFactor, float refDistance, float maxDistance) {
-        source = new Source(entity, listener, filePath, looping, gain, pitch, rollOffFactor, refDistance, maxDistance);
+    SourceComponent::SourceComponent(Entity* entity, const char* filePath, bool looping, float gain, float pitch, float rollOffFactor, float refDistance, float maxDistance) {
+        source = AudioSource::Create(entity, filePath, looping, gain, pitch, rollOffFactor, refDistance, maxDistance);
     }
 
-    SourceComponent::SourceComponent(Entity* entity, ListenerComponent& listener, const char* filePath, bool looping, float gain, float pitch, float rollOffFactor, float refDistance, float maxDistance) {
-        source = new Source(entity, listener.listener, filePath, looping, gain, pitch, rollOffFactor, refDistance, maxDistance);
+    SourceComponent::~SourceComponent() {
+        if (source != nullptr)
+            source = nullptr;
     }
 
-    SourceComponent::~SourceComponent() {}
+    RigidBodyComponent::RigidBodyComponent(Entity* entity, float mass, BodyType type, bool gravity) : disableGravity(!gravity), mass(mass), bodyType(type), scene(entity->GetScene()->GetPhysicsScene()) {
+        body = scene->CreateBody(entity);
+    }
 
-    void SourceComponent::Destroy() {
-        source->Destroy();
-        delete source;
+    RigidBodyComponent::~RigidBodyComponent() {
+        if (body != nullptr) {
+            scene->DestroyBody(body);
+            body = nullptr, scene = nullptr;
+        }
+    }
+
+    void CompoundColliderComponent::PushChildCollider(Entity* childCollider) {
+        compoundedColliderEntities.push_back(childCollider->GetID());
+    }
+
+    void CompoundColliderComponent::PopChildCollider() {
+        if (!compoundedColliderEntities.empty())
+            compoundedColliderEntities.pop_back();
     }
 }

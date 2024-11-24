@@ -2,8 +2,7 @@
 #include <Nickel2/Scene/Entity.hpp>
 
 namespace Nickel2 {
-    Entity::Entity(entt::entity handle, Nickel2::Scene* scene)
-        : entityHandle(handle), scene(scene) {
+    Entity::Entity(entt::entity handle, Nickel2::Scene* scene) : entityHandle(handle), scene(scene) {
         this->OnCreate();
     }
 
@@ -24,22 +23,6 @@ namespace Nickel2 {
     void Entity::Destroy() {
         NK_CORE_ASSERT(!destroyState, "Entity is already destroyed.");
         this->OnDestroy();
-
-        if (HasComponent<MeshComponent>())
-            GetComponent<MeshComponent>().Destroy();
-
-        if (HasComponent<SubmeshComponent>())
-            GetComponent<SubmeshComponent>().Destroy();
-
-        if (HasComponent<CameraComponent>())
-            GetComponent<CameraComponent>().Destroy();
-
-        if (HasComponent<ListenerComponent>())
-            GetComponent<ListenerComponent>().Destroy();
-
-        if (HasComponent<SourceComponent>())
-            GetComponent<SourceComponent>().Destroy();
-
         scene->DestroyEntity(this);
     }
 

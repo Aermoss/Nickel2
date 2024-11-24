@@ -77,7 +77,7 @@ namespace Nickel2 {
             bool overrideState = false;
 
             glm::vec3 translation = { 0.0f, 0.0f, 0.0f };
-            glm::vec3 _scale = { 1.0f, 1.0f, 1.0f };
+            glm::vec3 scale = { 1.0f, 1.0f, 1.0f };
             glm::vec3 rotationEuler = { 0.0f, 0.0f, 0.0f };
             glm::quat rotation = { 1.0f, 0.0f, 0.0f, 0.0f };
             glm::mat4 matrix = glm::mat4(1.0f);
@@ -118,8 +118,6 @@ namespace Nickel2 {
         SubmeshComponent(Entity* entity, std::vector<Vertex> vertices, std::vector<uint32_t> indices, Material& material);
         ~SubmeshComponent();
 
-        void Destroy();
-
         Submesh* operator->() {
             return submesh;
         }
@@ -131,8 +129,6 @@ namespace Nickel2 {
         MeshComponent(Entity* entity, const std::string& path);
         ~MeshComponent();
 
-        void Destroy();
-
         Mesh* operator->() {
             return mesh;
         }
@@ -141,10 +137,8 @@ namespace Nickel2 {
     struct CameraComponent {
         Camera* camera;
 
-        CameraComponent(Entity* entity, Window* window, float fov = 90.0f, float nearPlane = 0.01f, float farPlane = 1000.0f, uint32_t flags = NK_EULER_OVERRIDE);
+        CameraComponent(Entity* entity, float fov = 90.0f, float nearPlane = 0.01f, float farPlane = 1000.0f, uint32_t flags = NK_EULER_OVERRIDE);
         ~CameraComponent();
-
-        void Destroy();
 
         Camera* operator->() {
             return camera;

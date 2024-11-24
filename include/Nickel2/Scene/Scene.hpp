@@ -86,8 +86,6 @@ namespace Nickel2 {
             void PushLight(Light light);
             void PopLight();
 
-            void Destroy();
-
             friend class Entity;
     };
 }

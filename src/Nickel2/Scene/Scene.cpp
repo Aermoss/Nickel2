@@ -3,8 +3,27 @@
 #include <Nickel2/Scene/Entity.hpp>
 
 namespace Nickel2 {
-    Scene::Scene() : paused(false) {}
-    Scene::~Scene() { this->Destroy(); }
+    Scene::Scene() : paused(false) {
+        physicsScene = PhysicsSystem::CreateScene(this);
+    }
+    
+    Scene::~Scene() {
+        std::vector<uint64_t> queue;
+
+        for (auto& [id, entity] : entities) {
+            queue.push_back(id);
+        } entities.clear();
+
+        for (uint64_t id : queue) {
+            if (IsEntityIDValid(id)) {
+                Entity* entity = GetEntityByID(id);
+                if (!entity->Destroyed()) entity->Destroy();
+            }
+        }
+        
+        lights.clear();
+        physicsScene = nullptr;
+    }
 
     void Scene::Update(float deltaTime) {
         if (this->paused) return;
@@ -118,20 +137,5 @@ namespace Nickel2 {
 
     void Scene::PopLight() {
         lights.pop_back();
-    }
-
-    void Scene::Destroy() {
-        std::vector<uint64_t> queue;
-
-        for (auto& [id, entity] : entities) {
-            queue.push_back(id);
-        } entities.clear();
-
-        for (uint64_t id : queue) {
-            if (IsEntityIDValid(id)) {
-                Entity* entity = GetEntityByID(id);
-                if (!entity->Destroyed()) entity->Destroy();
-            }
-        } lights.clear();
     }
 }
