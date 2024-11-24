@@ -10,7 +10,7 @@ namespace Nickel2::Utils {
     void WriteFileBinary(const char* filePath, Buffer& buffer) {
         std::ofstream file(filePath, std::ios::out | std::ios::binary);
         if (!file.is_open()) return;
-        file.write(buffer.As<char>(), buffer.size);
+        file.write(buffer.as<char>(), buffer.size);
         file.close();
         return;
     }
@@ -37,7 +37,7 @@ namespace Nickel2::Utils {
         file.seekg(0, std::ios::end);
         Buffer buffer(file.tellg());
         file.seekg(0, std::ios::beg);
-        file.read(buffer.As<char>(), buffer.size);
+        file.read(buffer.as<char>(), buffer.size);
         file.close();
         return buffer;
     }
