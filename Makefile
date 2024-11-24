@@ -9,8 +9,10 @@ includeDir := ./include ./include/imgui ./include/imguizmo
 libraryDir := ./lib
 projectDir := $(sourceDir)/$(projectName)
 rendererDir := $(projectDir)/Renderer
+physicsDir := $(projectDir)/Physics
+audioDir := $(projectDir)/Audio
 vendorDir := $(sourceDir)/Vendor
-libraries := steam_api64 mono-2.0-sgen OpenAL32.dll alut.dll assimp.dll glfw3dll opengl32 Jolt avcodec.dll avdevice.dll \
+libraries := steam_api64 mono-2.0-sgen OpenAL32.dll alut.dll assimp.dll glfw3dll opengl32 Jolt.dll avcodec.dll avdevice.dll \
 	avfilter.dll avformat.dll avutil.dll postproc.dll swresample.dll swscale.dll gdi32 odbc32 odbccp32 dwmapi winmm
 executable := $(binaryDir)/Editor.exe
 staticLibrary := $(libraryDir)/lib$(projectName).a
@@ -35,6 +37,16 @@ moduleNames := $(filter-out Debug Editor $(pchName).cpp,$(patsubst $(projectDir)
 moduleSources := $(foreach dir,$(patsubst %,$(projectDir)/%,$(moduleNames)),$(wildcard $(dir)/*.cpp))
 moduleObjects := $(patsubst $(sourceDir)/%.cpp,$(objectDir)/%.o,$(moduleSources))
 
+audioDirs := $(wildcard $(audioDir)/*)
+audioNames := $(patsubst $(audioDir)/%,%,$(audioDirs))
+audioSources := $(foreach dir,$(patsubst %,$(audioDir)/%,$(audioNames)),$(wildcard $(dir)/*.cpp))
+audioObjects := $(patsubst $(sourceDir)/%.cpp,$(objectDir)/%.o,$(audioSources))
+
+physicsDirs := $(wildcard $(physicsDir)/*)
+physicsNames := $(patsubst $(physicsDir)/%,%,$(physicsDirs))
+physicsSources := $(foreach dir,$(patsubst %,$(physicsDir)/%,$(physicsNames)),$(wildcard $(dir)/*.cpp))
+physicsObjects := $(patsubst $(sourceDir)/%.cpp,$(objectDir)/%.o,$(physicsSources))
+
 rendererDirs := $(wildcard $(rendererDir)/*)
 rendererNames := $(patsubst $(rendererDir)/%,%,$(rendererDirs))
 rendererSources := $(foreach dir,$(patsubst %,$(rendererDir)/%,$(rendererNames)),$(wildcard $(dir)/*.cpp))
@@ -51,7 +63,7 @@ $(pch).gch: $(pch) $(foreach file,Platform Base Assert Utils Logger,$(patsubst %
 	@python ./checkDir.py --path="$(dir $@)"
 	$(cc) $(warnings) $< -o $@ $(addprefix -I,$(includeDir)) $(defines)
 
-$(executable): $(pchObject) $(editorObjects) $(moduleObjects) $(rendererObjects) $(vendorObjects)
+$(executable): $(pchObject) $(editorObjects) $(moduleObjects) $(audioObjects) $(physicsObjects) $(rendererObjects) $(vendorObjects)
 	@python ./checkDir.py --path="$(dir $@)"
 	$(cc) $(warnings) $^ -o $@ $(addprefix -I,$(includeDir)) $(addprefix -L,$(libraryDir)) $(libraries) $(flags) $(defines)
 
@@ -67,7 +79,7 @@ $(objectDir)/Vendor/%.o: $(sourceDir)/Vendor/%.cpp
 	@python ./checkDir.py --path="$(dir $@)"
 	$(cc) $(warnings) $< -c -o $@ $(addprefix -I,$(includeDir)) $(defines)
 
-$(staticLibrary): $(pchObject) $(moduleObjects) $(rendererObjects)
+$(staticLibrary): $(pchObject) $(moduleObjects) $(audioObjects) $(physicsObjects) $(rendererObjects)
 	@python ./checkDir.py --path="$(dir $@)"
 	@python ./incVersion.py --path="./include/$(projectName)/Core/Version.hpp"
 	ar rcs $@ $^
