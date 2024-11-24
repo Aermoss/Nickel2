@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/matrix.hpp>
@@ -32,8 +36,16 @@
 #include <stb/stb_image_write.h>
 #include <entt/entt.hpp>
 
-#include "Audio/Listener.hpp"
-#include "Audio/Source.hpp"
+#ifndef JPH_ENABLE_ASSERTS
+#define JPH_ENABLE_ASSERTS
+#endif
+
+#include <Jolt/Jolt.h>
+
+#include "Audio/AudioAPI.hpp"
+#include "Audio/AudioListener.hpp"
+#include "Audio/AudioSource.hpp"
+#include "Audio/AudioSystem.hpp"
 
 #include "Core/Base.hpp"
 #include "Core/Version.hpp"
@@ -56,18 +68,42 @@
 
 #include "Math/Math.hpp"
 
-#include "Renderer/Vertex.hpp"
-#include "Renderer/Mesh.hpp"
-#include "Renderer/Submesh.hpp"
+#include "Physics/ColliderMaterial.hpp"
+#include "Physics/MeshCookingFactory.hpp"
+#include "Physics/PhysicsAPI.hpp"
+#include "Physics/PhysicsBody.hpp"
+#include "Physics/PhysicsLayer.hpp"
+#include "Physics/PhysicsScene.hpp"
+#include "Physics/PhysicsSettings.hpp"
+#include "Physics/PhysicsShapes.hpp"
+#include "Physics/PhysicsSystem.hpp"
+#include "Physics/PhysicsTypes.hpp"
+
 #include "Renderer/Buffer.hpp"
-#include "Renderer/VertexArray.hpp"
-#include "Renderer/Shader.hpp"
-#include "Renderer/Material.hpp"
-#include "Renderer/Renderer.hpp"
 #include "Renderer/Camera.hpp"
-#include "Renderer/Texture.hpp"
+#include "Renderer/FrameBuffer.hpp"
+#include "Renderer/ImGuiLayer.hpp"
+#include "Renderer/Light.hpp"
+#include "Renderer/Material.hpp"
+#include "Renderer/Mesh.hpp"
+#include "Renderer/RenderCommand.hpp"
+#include "Renderer/Renderer.hpp"
+#include "Renderer/RendererAPI.hpp"
+#include "Renderer/RendererContext.hpp"
 #include "Renderer/SceneRenderer.hpp"
+#include "Renderer/Shader.hpp"
+#include "Renderer/Submesh.hpp"
+#include "Renderer/Texture.hpp"
+#include "Renderer/UniformBuffer.hpp"
+#include "Renderer/Vertex.hpp"
+#include "Renderer/VertexArray.hpp"
 
 #include "Scene/Component.hpp"
 #include "Scene/Entity.hpp"
 #include "Scene/Scene.hpp"
+
+#ifdef NK_PLATFORM_WINDOWS
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <dwmapi.h>
+#endif

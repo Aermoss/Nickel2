@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/matrix.hpp>
@@ -32,16 +36,24 @@
 #include <stb/stb_image_write.h>
 #include <entt/entt.hpp>
 
+#ifndef JPH_ENABLE_ASSERTS
+#define JPH_ENABLE_ASSERTS
+#endif
+
+#include <Jolt/Jolt.h>
+
 #include <Nickel2/Core/Platform.hpp>
+
+#ifdef NK_PLATFORM_WINDOWS
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <dwmapi.h>
+#endif
+
 #include <Nickel2/Core/Base.hpp>
 #include <Nickel2/Core/Assert.hpp>
 #include <Nickel2/Core/Utils.hpp>
 #include <Nickel2/Core/Logger.hpp>
-
-#ifdef NK_PLATFORM_WINDOWS
-#include <windows.h>
-#include <dwmapi.h>
-#endif
 
 #include <algorithm>
 #include <array>
