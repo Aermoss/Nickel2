@@ -19,9 +19,6 @@ namespace Nickel2 {
 
     void Entity::Update(float deltaTime) {
         this->OnUpdate(deltaTime);
-
-        if (HasComponent<ListenerComponent>())
-            GetComponent<ListenerComponent>()->Update(deltaTime);
     }
 
     void Entity::Destroy() {

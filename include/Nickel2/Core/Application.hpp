@@ -29,7 +29,6 @@ namespace Nickel2 {
 
             ApplicationSpecification specification;
             bool isTerminated = false, isMinimized = false;
-            ALCcontext* alcContext;
 
             LayerStack layerStack;
             ImGuiLayer* imGuiLayer;

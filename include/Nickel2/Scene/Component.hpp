@@ -11,8 +11,7 @@
 #include <glm/gtx/io.hpp>
 
 #include "../Core/Logger.hpp"
-#include "../Audio/Listener.hpp"
-#include "../Audio/Source.hpp"
+#include "../Audio/AudioSystem.hpp"
 #include "../Renderer/Material.hpp"
 #include "../Renderer/Mesh.hpp"
 #include "../Renderer/Submesh.hpp"
@@ -28,8 +27,6 @@ namespace Nickel2 {
     class Window;
     class Submesh;
     class Mesh;
-    class Listener;
-    class Source;
 
     struct Material;
     
@@ -155,31 +152,27 @@ namespace Nickel2 {
     };
 
     struct ListenerComponent {
-        Listener* listener;
+        std::shared_ptr<AudioListener> listener;
 
         ListenerComponent(Entity* entity, DistanceModel distanceModel = DistanceModel::InverseDistance);
         ~ListenerComponent();
 
-        void Destroy();
-
-        Listener* operator->() {
-            return listener;
+        AudioListener* operator->() {
+            return listener.get();
         }
     };
 
     struct SourceComponent {
-        Source* source;
+        std::shared_ptr<AudioSource> source;
 
-        SourceComponent(Entity* entity, Listener* listener, const char* filePath, bool looping = false,\
-            float pitch = 1.0f, float gain = 1.0f, float rollOffFactor = 1.0f, float refDistance = 1.0f, float maxDistance = FLT_MAX);
-        SourceComponent(Entity* entity, ListenerComponent& listener, const char* filePath, bool looping = false, \
-            float pitch = 1.0f, float gain = 1.0f, float rollOffFactor = 1.0f, float refDistance = 1.0f, float maxDistance = FLT_MAX);
+        SourceComponent(Entity* entity, const char* filePath, bool looping = false, float pitch = 1.0f, float gain = 1.0f, float rollOffFactor = 1.0f, float refDistance = 1.0f, float maxDistance = FLT_MAX);
         ~SourceComponent();
 
-        void Destroy();
+        AudioSource* operator->() {
+            return source.get();
+        }
+    };
 
-        Source* operator->() {
-            return source;
         }
     };
 }

@@ -28,6 +28,7 @@ namespace Nickel2 {
         if (specification.maximized) window->Maximize();
 
         Renderer::Initialize();
+        AudioSystem::Initialize();
         Input::Initialize(static_cast<GLFWwindow*>(window->GetHandle()));
         
         if (specification.renderer)
@@ -35,36 +36,16 @@ namespace Nickel2 {
 
         imGuiLayer = ImGuiLayer::Create();
         PushLayer(imGuiLayer);
-
-        if (!alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT"))
-            Nickel2::Logger::Log(Nickel2::Logger::Level::Error, "OpenAL", "ALC enumeration extension not available.");
-
-        const char* defaultDeviceName = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
-        ALCdevice* device = alcOpenDevice(defaultDeviceName);
-
-        if (!device) {
-            Nickel2::Logger::Log(Nickel2::Logger::Level::Error, "OpenAL", ("Unable to open default audio device: \"" + std::string(defaultDeviceName) + "\".").c_str());
-        } else {
-            Nickel2::Logger::Log(Nickel2::Logger::Level::Info, "OpenAL", ("Found audio device: \"" + std::string(defaultDeviceName) + "\".").c_str());
-            alcContext = alcCreateContext(device, NULL);
-
-            if (!alcMakeContextCurrent(alcContext))
-                Nickel2::Logger::Log(Nickel2::Logger::Level::Error, "OpenAL", "Failed to make ALC context current.");
-        }
-
     }
 
     Application::~Application() {
-        alcCloseDevice(alcGetContextsDevice(alcContext));
-        alcDestroyContext(alcContext);
-        alcMakeContextCurrent(nullptr);
-
         for (Layer* layer : layerStack) {
             layer->OnDetach();
             delete layer;
         }
 
         Input::Terminate();
+        AudioSystem::Terminate();
         Renderer::Terminate();
 
         window->SetEventCallback([](Event& event) {});
@@ -98,6 +79,7 @@ namespace Nickel2 {
 
             if (!this->isMinimized) {
                 RenderCommand::Clear();
+                AudioSystem::Update(deltaTime);
                 this->OnUpdate(deltaTime);
 
                 for (Layer* layer : this->layerStack)
