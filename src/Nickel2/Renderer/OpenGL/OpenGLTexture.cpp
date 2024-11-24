@@ -9,16 +9,16 @@ namespace Nickel2 {
             switch (format) {
                 case ImageFormat::RGB8: return GL_RGB;
                 case ImageFormat::RGBA8: return GL_RGBA;
-                default: break;
-            } return 0;
+                default: return 0;
+            }
         }
         
         static uint32_t GetInternalImageFormat(ImageFormat format) {
             switch (format) {
                 case ImageFormat::RGB8: return GL_RGB8;
                 case ImageFormat::RGBA8: return GL_RGBA8;
-                default: break;
-            } return 0;
+                default: return 0;
+            }
         }
     }
 
@@ -63,7 +63,7 @@ namespace Nickel2 {
             this->internalFormat = internalFormat;
             this->format = format;
 
-            NK_CORE_ASSERT(internalFormat & format, "Unsupported format.");
+            // NK_CORE_ASSERT(internalFormat & format, "Unsupported format.");
 
             glCreateTextures(GL_TEXTURE_2D, 1, &id);
             glTextureStorage2D(id, 1, internalFormat, width, height);

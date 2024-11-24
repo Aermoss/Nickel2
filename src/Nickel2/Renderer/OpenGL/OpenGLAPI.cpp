@@ -1,5 +1,5 @@
 #include <Nickel2/nkpch.hpp>
-#include <Nickel2/Renderer/OpenGL/OpenGLRendererAPI.hpp>
+#include <Nickel2/Renderer/OpenGL/OpenGLAPI.hpp>
 
 #include <glad/glad.h>
 
@@ -7,7 +7,7 @@ namespace Nickel2 {
     namespace Utils {
         const char* GetSource(int source) {
             switch (source) {
-                case GL_DEBUG_SOURCE_API: return "API";
+                case GL_DEBUG_SOURCE_API: return "RendererAPIType";
                 case GL_DEBUG_SOURCE_WINDOW_SYSTEM: return "Window System";
                 case GL_DEBUG_SOURCE_SHADER_COMPILER: return "Shader Compiler";
                 case GL_DEBUG_SOURCE_THIRD_PARTY: return "Third Party";

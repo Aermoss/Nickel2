@@ -12,7 +12,7 @@ namespace Nickel2 {
         "useAlbedoMap", "useRoughnessMap", "useMetallicMap", "useNormalMap", "useSpecularMap", "useAmbientMap"
     };
 
-    Submesh::Submesh(Entity* entity, std::vector<Vertex> vertices, std::vector<uint32_t> indices, Material material) : entity(entity), material(material) {
+    Submesh::Submesh(Entity* entity, std::vector<Vertex> vertices, std::vector<uint32_t> indices, Material material) : entity(entity), vertices(vertices), indices(indices), material(material) {
         vertexArray = VertexArray::Create();
         vertexBuffer = VertexBuffer::Create((float*) vertices.data(), vertices.size() * sizeof(Vertex));
         indexBuffer = IndexBuffer::Create(indices.data(), indices.size());
@@ -30,8 +30,9 @@ namespace Nickel2 {
     void Submesh::Render(std::shared_ptr<Shader> shader, bool useTexture) {
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        
+        glBlendFunc(GL_SRC_ALPHA, material.albedo.a < 1.0f ? GL_ONE : GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
+
         shader->Bind();
         shader->SetFloat4("albedoDefault", material.albedo);
         shader->SetFloat("roughnessDefault", material.roughness);

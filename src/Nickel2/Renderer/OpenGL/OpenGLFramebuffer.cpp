@@ -52,16 +52,16 @@ namespace Nickel2 {
         static bool IsDepthFormat(FramebufferTextureFormat format) {
             switch (format) {
                 case FramebufferTextureFormat::DEPTH24STENCIL8: return true;
-                default: break;
-            } return false;
+                default: return false;
+            }
         }
 
         static GLenum GetFramebufferTextureFormat(FramebufferTextureFormat format) {
             switch (format) {
                 case FramebufferTextureFormat::RGBA8: return GL_RGBA8;
                 case FramebufferTextureFormat::RED_INTEGER: return GL_RED_INTEGER;
-                default: break;
-            } return 0;
+                default: return 0;
+            }
         }
     }
 

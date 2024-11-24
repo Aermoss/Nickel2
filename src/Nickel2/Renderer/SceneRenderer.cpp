@@ -22,10 +22,10 @@ namespace Nickel2 {
             const uint32_t Y_SEGMENTS = 64;
             const float PI = 3.14159265359f;
 
-            for (uint32_t x = 0; x <= X_SEGMENTS; ++x) {
-                for (uint32_t y = 0; y <= Y_SEGMENTS; ++y) {
-                    float xSegment = (float)x / (float)X_SEGMENTS;
-                    float ySegment = (float)y / (float)Y_SEGMENTS;
+            for (uint32_t x = 0; x <= X_SEGMENTS; x++) {
+                for (uint32_t y = 0; y <= Y_SEGMENTS; y++) {
+                    float xSegment = (float) x / (float) X_SEGMENTS;
+                    float ySegment = (float) y / (float) Y_SEGMENTS;
                     float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
                     float yPos = std::cos(ySegment * PI);
                     float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
@@ -541,8 +541,8 @@ namespace Nickel2 {
     }
 
     void SceneRenderer::FreeSkybox() {
-        if (!enableSkybox) { return; }
-        else { enableSkybox = false; }
+        if (!enableSkybox) return;
+        enableSkybox = false;
 
         hdrTexture = nullptr;
         glDeleteTextures(1, &envCubeMap);
@@ -559,9 +559,8 @@ namespace Nickel2 {
     }
 
     void SceneRenderer::LoadSkybox(const std::string& filePath) {
-        if (enableSkybox) {
-            FreeSkybox();
-        } enableSkybox = true;
+        if (enableSkybox) FreeSkybox();
+        enableSkybox = true;
 
         equirectangularToCubeMapShader = shaderLibrary.Load("equirectangularToCubeMap", {
             { ShaderStage::Vertex, "shaders/cubeMap.vert" },
@@ -1074,18 +1073,36 @@ namespace Nickel2 {
             }
         }
 
-        ImGui::BeginChild("Render");
-        ImVec2 wsize = ImGui::GetWindowSize();
-        ImGui::Image((void*) (intptr_t) bloomRenderer->GetBloomTexture(), wsize, ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::Image((void*) (intptr_t) depthMapDirectional, wsize, ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::Image((void*) (intptr_t) ssaoColorBuffer, wsize, ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::Image((void*) (intptr_t) gPosition, wsize, ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::Image((void*) (intptr_t) gNormal, wsize, ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::Image((void*) (intptr_t) gAlbedo, wsize, ImVec2(0, 1), ImVec2(1, 0));
-        ImGui::EndChild();
+        ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
 
-        ImGui::Checkbox("Enable SSAO", &enableSSAO);
-        ImGui::SliderFloat("Bloom Filter Radius", &bloomFilterRadius, 0.001f, 0.015f);
+        if (ImGui::TreeNode("Bloom")) {
+            ImGui::SliderFloat("Bloom Filter Radius", &bloomFilterRadius, 0.001f, 0.015f);
+            ImGui::Image((void*) (intptr_t) postProcessingColorBuffers[1], { 256.0f, 256.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
+            ImGui::Image((void*) (intptr_t) bloomRenderer->GetBloomTexture(), { 256.0f, 256.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
+            ImGui::TreePop();
+        }
+
+        if (ImGui::TreeNode("Shadows")) {
+            ImGui::Image((void*) (intptr_t) depthMapDirectional, { 256.0f, 256.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
+            ImGui::TreePop();
+        }
+
+        if (ImGui::TreeNode("G-Buffer")) {
+            ImGui::Image((void*) (intptr_t) gPosition, { 256.0f, 256.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
+            ImGui::Image((void*) (intptr_t) gNormal, { 256.0f, 256.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
+            ImGui::Image((void*) (intptr_t) gAlbedo, { 256.0f, 256.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
+            ImGui::TreePop();
+        }
+
+        if (ImGui::TreeNode("SSAO")) {
+            ImGui::Checkbox("Enable SSAO", &enableSSAO);
+            ImGui::Image((void*) (intptr_t) ssaoColorBuffer, { 256.0f, 256.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
+            ImGui::Image((void*) (intptr_t) ssaoColorBufferBlur, { 256.0f, 256.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
+            ImGui::TreePop();
+        }
+
+        ImGui::SetWindowPos({ 10.0f, 10.0f });
+        ImGui::End();
 
         if (Input::IsKeyHeld(Key::GraveAccent)) {
             if (consoleKeyState)

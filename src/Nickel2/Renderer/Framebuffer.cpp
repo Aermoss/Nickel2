@@ -1,6 +1,6 @@
 #include <Nickel2/nkpch.hpp>
 #include <Nickel2/Renderer/Framebuffer.hpp>
-#include <Nickel2/Renderer/Renderer.hpp>
+#include <Nickel2/Renderer/RendererAPI.hpp>
 
 #include <Nickel2/Renderer/OpenGL/OpenGLFramebuffer.hpp>
 
@@ -11,9 +11,10 @@ namespace Nickel2 {
     }
 
     std::shared_ptr<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec) {
-        switch (Renderer::GetAPI()) {
-            case API::None: return nullptr;
-            case API::OpenGL: return std::make_shared<OpenGLFramebuffer>(spec);
-        } return nullptr;
+        switch (RendererAPI::GetAPI()) {
+            case RendererAPIType::None: return nullptr;
+            case RendererAPIType::OpenGL: return std::make_shared<OpenGLFramebuffer>(spec);
+            default: return nullptr;
+        }
     }
 }

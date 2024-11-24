@@ -18,8 +18,8 @@ namespace Nickel2 {
                 case DataType::Int3: return GL_INT;
                 case DataType::Int4: return GL_INT;
                 case DataType::Bool: return GL_BOOL;
-                default: break;
-            } return 0;
+                default: return 0;
+            }
         }
     }
 

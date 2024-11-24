@@ -1,13 +1,13 @@
 #include <Nickel2/nkpch.hpp>
 #include <Nickel2/Renderer/Shader.hpp>
-#include <Nickel2/Renderer/Renderer.hpp>
+#include <Nickel2/Renderer/RendererAPI.hpp>
 
 #include <Nickel2/Renderer/OpenGL/OpenGLShader.hpp>
 
 namespace Nickel2 {
     std::shared_ptr<Shader> Shader::Create(const std::string& name, const std::unordered_map<ShaderStage, std::string>& sources) {
-        switch (Renderer::GetAPI()) {
-            case API::OpenGL: return std::make_shared<OpenGLShader>(name, sources);
+        switch (RendererAPI::GetAPI()) {
+            case RendererAPIType::OpenGL: return std::make_shared<OpenGLShader>(name, sources);
             default: return nullptr;
         }
     }

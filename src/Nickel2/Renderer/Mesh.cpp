@@ -15,7 +15,7 @@ namespace Nickel2 {
     }
 
     static const uint32_t flags = aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_GenUVCoords | aiProcess_CalcTangentSpace \
-                                | aiProcess_JoinIdenticalVertices | aiProcess_LimitBoneWeights | aiProcess_ValidateDataStructure | aiProcess_GlobalScale;
+        | aiProcess_JoinIdenticalVertices | aiProcess_LimitBoneWeights | aiProcess_ValidateDataStructure | aiProcess_GlobalScale;
 
     void Mesh::LoadMesh(std::string const& path) {
         Assimp::Importer importer;

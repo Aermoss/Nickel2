@@ -1,16 +1,14 @@
 #include <Nickel2/nkpch.hpp>
 #include <Nickel2/Renderer/RendererAPI.hpp>
-#include <Nickel2/Renderer/Renderer.hpp>
+#include <Nickel2/Renderer/RendererAPI.hpp>
 
-#include <Nickel2/Renderer/OpenGL/OpenGLRendererAPI.hpp>
+#include <Nickel2/Renderer/OpenGL/OpenGLAPI.hpp>
 
 namespace Nickel2 {
-    API RendererAPI::api = API::OpenGL;
-
-    Scope<RendererAPI> RendererAPI::Create() {
-        switch (Renderer::GetAPI()) {
-            case API::None: return nullptr;
-            case API::OpenGL: return std::make_unique<OpenGLRendererAPI>();
-        } return nullptr;
+    std::unique_ptr<RendererAPI> RendererAPI::Create() {
+        switch (RendererAPI::GetAPI()) {
+            case RendererAPIType::OpenGL: return std::make_unique<OpenGLRendererAPI>();
+            default: return nullptr;
+        }
     }
 }

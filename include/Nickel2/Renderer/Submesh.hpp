@@ -22,6 +22,9 @@ namespace Nickel2 {
             std::shared_ptr<VertexBuffer> vertexBuffer;
             std::shared_ptr<IndexBuffer> indexBuffer;
             std::shared_ptr<VertexArray> vertexArray;
+            
+            std::vector<Vertex> vertices;
+            std::vector<uint32_t> indices;
 
         public:
             Material material;
@@ -31,5 +34,8 @@ namespace Nickel2 {
             
             void Render(std::shared_ptr<Shader> shader, bool useTexture = true);
             void Destroy();
+
+            const std::vector<Vertex>& GetVertices() { return vertices; }
+            const std::vector<uint32_t>& GetIndices() { return indices; }
     };
 }
