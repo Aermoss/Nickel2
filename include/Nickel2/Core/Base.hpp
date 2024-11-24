@@ -29,14 +29,12 @@ namespace Nickel2 {
     void Terminate();
 
     template<typename T> using Scope = std::unique_ptr<T>;
-    template<typename T, typename ... _args>
-    constexpr Scope<T> createScope(_args&& ... args) {
+    template<typename T, typename ... _args> constexpr Scope<T> CreateScope(_args&& ... args) {
         return std::make_unique<T>(std::forward<_args>(args)...);
     }
 
     template<typename T> using Ref = std::shared_ptr<T>;
-    template<typename T, typename ... _args>
-    constexpr Ref<T> createRef(_args&& ... args) {
+    template<typename T, typename ... _args> constexpr Ref<T> CreateRef(_args&& ... args) {
         return std::make_shared<T>(std::forward<_args>(args)...);
     }
 }
