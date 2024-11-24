@@ -10,16 +10,15 @@ namespace Nickel2 {
             float sensitivity, targetFov, lastScroll = 0.0f, targetSpeed = 0.0f, \
                 currentSpeed = 0.0f, normalSpeed = 0.125f, sprintSpeed = 0.250f;
 
-            double realYaw = 0.0, realPitch = 0.0, \
-                interpolatedYaw = 0.0, interpolatedPitch = 0.0;
+            float realYaw = 0.0f, realPitch = 0.0f, \
+                interpolatedYaw = 0.0f, interpolatedPitch = 0.0f;
 
             float lastAngleUpdate = 0.0f, angleRange = 2.0f, offsetMultiplier = 3.0f;
             glm::vec2 randomAngle = glm::vec2(0.0f), currentAngle = glm::vec2(0.0f), interpolatedAngle = glm::vec2(0.0f);
             glm::vec3 targetPosition = glm::vec3(0.0f, 0.0f, 0.0f);
 
-            FirstPersonCamera(Scene* scene, Window* window, float fov, float sensitivity, float nearPlane, float farPlane)
-                : Entity(scene), window(window), sensitivity(sensitivity), targetFov(fov) {
-                AddComponent<CameraComponent>(window, fov, nearPlane, farPlane, NK_EULER_OVERRIDE);
+            FirstPersonCamera(Scene* scene, Window* window, float fov, float sensitivity, float nearPlane, float farPlane) : Entity(scene), window(window), sensitivity(sensitivity), targetFov(fov) {
+                AddComponent<CameraComponent>(fov, nearPlane, farPlane, NK_EULER_OVERRIDE);
             }
 
             ~FirstPersonCamera() {}
@@ -61,8 +60,8 @@ namespace Nickel2 {
                 transform.SetTranslation(glm::lerp(transform.GetTranslation(), targetPosition, 7.5f * deltaTime));
                 glm::vec2 position = Input::GetMousePosition(), size = window->GetSize();
 
-                double xOffset = sensitivity * (position.x - (int32_t) (size.x / 2)) / size.x;
-                double yOffset = sensitivity * (position.y - (int32_t) (size.y / 2)) / size.y;
+                float xOffset = sensitivity * (position.x - (uint32_t) (size.x / 2)) / size.x;
+                float yOffset = sensitivity * (position.y - (uint32_t) (size.y / 2)) / size.y;
 
                 if (lastAngleUpdate + 0.5f < window->GetTime()) {
                     lastAngleUpdate = window->GetTime();
@@ -78,10 +77,12 @@ namespace Nickel2 {
                 if (currentAngle.y > glm::pi<float>() * 2.0f) currentAngle.y -= glm::pi<float>() * 2.0f;
                 if (currentAngle.y < glm::pi<float>() * 2.0f) currentAngle.y += glm::pi<float>() * 2.0f;
 
-                realYaw += xOffset, realPitch = glm::clamp(realPitch - yOffset, -89.99, 89.99);
-                interpolatedPitch = glm::lerp(interpolatedPitch, realPitch, static_cast<double>(15.0f * deltaTime));
-                interpolatedYaw = glm::lerp(interpolatedYaw, realYaw, static_cast<double>(15.0f * deltaTime));
-                camera->pitch = glm::clamp(interpolatedPitch + glm::sin(currentAngle.y) * offsetMultiplier, -89.99, 89.99);
+                realYaw += xOffset, realPitch = glm::clamp(realPitch - yOffset, -89.99f, 89.99f);
+                if (realPitch > 89.99f - offsetMultiplier) realPitch = glm::lerp(realPitch, 89.99f - offsetMultiplier, 7.5f * deltaTime);
+                if (realPitch < -89.99f + offsetMultiplier) realPitch = glm::lerp(realPitch, -89.99f + offsetMultiplier, 7.5f * deltaTime);
+                interpolatedPitch = glm::lerp(interpolatedPitch, realPitch, 15.0f * deltaTime);
+                interpolatedYaw = glm::lerp(interpolatedYaw, realYaw, 15.0f * deltaTime);
+                camera->pitch = glm::clamp(interpolatedPitch + glm::sin(currentAngle.y) * offsetMultiplier, -89.99f, 89.99f);
                 camera->yaw = interpolatedYaw + glm::cos(currentAngle.x) * offsetMultiplier;
 
                 float change = lastScroll - Input::GetMouseScroll().y;
