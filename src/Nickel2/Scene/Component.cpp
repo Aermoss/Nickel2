@@ -59,20 +59,20 @@ namespace Nickel2 {
     }
 
     void TransformComponent::Scale(const glm::vec3& scale) {
-        this->_scale *= scale;
+        this->scale *= scale;
     }
 
     void TransformComponent::Reset() {
         this->overrideState = false;
         this->translation = { 0.0f, 0.0f, 0.0f };
-        this->_scale = { 1.0f, 1.0f, 1.0f };
+        this->scale = { 1.0f, 1.0f, 1.0f };
         this->rotationEuler = { 0.0f, 0.0f, 0.0f };
         this->rotation = { 1.0f, 0.0f, 0.0f, 0.0f };
         this->matrix = glm::mat4(1.0f);
     }
 
     void TransformComponent::DecomposeTransform(const glm::mat4& transform) {
-        Math::DecomposeTransform(transform, this->translation, this->rotation, this->_scale);
+        Math::DecomposeTransform(transform, this->translation, this->rotation, this->scale);
         this->rotationEuler = glm::eulerAngles(this->rotation);
     }
 
@@ -92,7 +92,7 @@ namespace Nickel2 {
 
     glm::mat4 TransformComponent::GetLocalTransform() const {
         return IsOverridden() ? this->matrix : (glm::translate(glm::mat4(1.0f), this->translation)
-             * glm::toMat4(this->rotation) * glm::scale(glm::mat4(1.0f), this->_scale));
+             * glm::toMat4(this->rotation) * glm::scale(glm::mat4(1.0f), this->scale));
     }
     
     glm::vec3 TransformComponent::GetTranslation() const {
@@ -104,11 +104,11 @@ namespace Nickel2 {
     }
 
     glm::vec3 TransformComponent::GetScale() const {
-        return this->_scale;
+        return this->scale;
     }
 
     void TransformComponent::SetScale(const glm::vec3& scale) {
-        this->_scale = scale;
+        this->scale = scale;
     }
 
     glm::vec3 TransformComponent::GetRotationEuler() const {
