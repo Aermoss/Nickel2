@@ -1,4 +1,5 @@
 .vscode
+screenshot.png
 shaders/ocean
 src/Nickel2/Debug
 include/Nickel2/*.gch
