@@ -13,12 +13,14 @@
 
 namespace Nickel2 {
     class Entity;
+    class PhysicsScene;
     class Camera;
-    
+
     struct CameraComponent;
 
     class Scene {
         private:
+            std::shared_ptr<PhysicsScene> physicsScene;
             std::unordered_map<uint64_t, Entity*> entities;
             std::vector<Light> lights;
             entt::registry registry;
@@ -81,6 +83,10 @@ namespace Nickel2 {
             Camera* GetPrimaryCamera();
             CameraComponent* GetPrimaryCameraComponent();
             Entity* GetPrimaryCameraEntity();
+
+            std::shared_ptr<PhysicsScene> GetPhysicsScene() {
+                return physicsScene;
+            }
 
             std::vector<Light>& GetLights();
             void PushLight(Light light);

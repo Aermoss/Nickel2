@@ -3,6 +3,8 @@
 #include <Nickel2/Core/Input.hpp>
 #include <Nickel2/Core/Window.hpp>
 #include <Nickel2/Renderer/Renderer.hpp>
+#include <Nickel2/Physics/PhysicsSystem.hpp>
+#include <Nickel2/Physics/PhysicsLayer.hpp>
 
 #include <filesystem>
 
@@ -29,6 +31,9 @@ namespace Nickel2 {
 
         Renderer::Initialize();
         AudioSystem::Initialize();
+        PhysicsSystem::Initialize();
+        PhysicsLayerManager::ClearLayers();
+		PhysicsLayerManager::AddLayer("Default");
         Input::Initialize(static_cast<GLFWwindow*>(window->GetHandle()));
         
         if (specification.renderer)
@@ -45,6 +50,8 @@ namespace Nickel2 {
         }
 
         Input::Terminate();
+        PhysicsLayerManager::ClearLayers();
+        PhysicsSystem::Terminate();
         AudioSystem::Terminate();
         Renderer::Terminate();
 
@@ -113,7 +120,7 @@ namespace Nickel2 {
                 WindowResizeEvent& resizeEvent = static_cast<WindowResizeEvent&>(event);
                 glm::vec2 size = resizeEvent.GetSize();
                 if (size.x == 0 || size.y == 0) break;
-                RenderCommand::SetViewport(0, 0, size.x, size.y);
+                Renderer::OnWindowResize(size.x, size.y);
                 break;
             } case EventType::WindowMinimize: {
                 this->isMinimized = static_cast<WindowMinimizeEvent&>(event).IsMinimized();

@@ -1,6 +1,8 @@
 #include <Nickel2/nkpch.hpp>
 #include <Nickel2/Scene/Scene.hpp>
 #include <Nickel2/Scene/Entity.hpp>
+#include <Nickel2/Physics/PhysicsSystem.hpp>
+#include <Nickel2/Physics/PhysicsLayer.hpp>
 
 namespace Nickel2 {
     Scene::Scene() : paused(false) {
@@ -27,6 +29,8 @@ namespace Nickel2 {
 
     void Scene::Update(float deltaTime) {
         if (this->paused) return;
+        if (physicsScene != nullptr)
+            physicsScene->Simulate(deltaTime);
 
         for (auto& [id, entity] : entities)
             entity->Update(deltaTime);
