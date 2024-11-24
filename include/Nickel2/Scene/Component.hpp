@@ -16,6 +16,9 @@
 #include "../Renderer/Mesh.hpp"
 #include "../Renderer/Submesh.hpp"
 #include "../Renderer/Camera.hpp"
+#include "../Physics/PhysicsTypes.hpp"
+#include "../Physics/MeshCookingFactory.hpp"
+#include "../Physics/ColliderMaterial.hpp"
 #include "../Math/Math.hpp"
 
 #include <cstdint>
@@ -27,6 +30,8 @@ namespace Nickel2 {
     class Window;
     class Submesh;
     class Mesh;
+    class PhysicsScene;
+    class PhysicsBody;
 
     struct Material;
     
@@ -167,6 +172,72 @@ namespace Nickel2 {
         }
     };
 
+    struct RigidBodyComponent {
+        uint32_t layerId = 0;
+        bool enableDynamicTypeChange = false, disableGravity = false, isTrigger = false;
+        float maxLinearVelocity = 500.0f, maxAngularVelocity = 50.0f;
+        float mass = 1.0f, linearDrag = 0.01f, angularDrag = 0.05f;
+
+        ActorAxis lockedAxes = ActorAxis::None;
+        CollisionDetection collisionDetection = CollisionDetection::Discrete;
+        BodyType bodyType = BodyType::Static;
+
+        glm::vec3 initialLinearVelocity = glm::vec3(0.0f);
+        glm::vec3 initialAngularVelocity = glm::vec3(0.0f);
+
+        std::shared_ptr<PhysicsBody> body;
+        std::shared_ptr<PhysicsScene> scene;
+
+        RigidBodyComponent(Entity* entity, float mass = 1.0f, BodyType bodyType = BodyType::Static, bool gravity = true);
+        ~RigidBodyComponent();
+
+        PhysicsBody* operator->() {
+            return body.get();
         }
+    };
+
+    struct CompoundColliderComponent {
+        std::vector<uint64_t> compoundedColliderEntities;
+        bool includeStaticChildColliders = true, isImmutable = true;
+
+        CompoundColliderComponent(Entity* entity) {}
+        ~CompoundColliderComponent() {}
+
+        void PushChildCollider(Entity* childCollider);
+        void PopChildCollider();
+    };
+
+    struct BoxColliderComponent {
+        glm::vec3 halfSize, offset;
+        ColliderMaterial material;
+
+        BoxColliderComponent(Entity* entity, const glm::vec3& halfSize = glm::vec3(0.5f), const glm::vec3& offset = glm::vec3(0.0f), ColliderMaterial material = {}) : halfSize(halfSize), offset(offset), material(material) {}
+        ~BoxColliderComponent() {}
+    };
+
+    struct SphereColliderComponent {
+        float radius;
+        ColliderMaterial material;
+        glm::vec3 offset;
+
+        SphereColliderComponent(Entity* entity, float radius = 0.5f, const glm::vec3& offset = glm::vec3(0.0f), ColliderMaterial material = {}) : radius(radius), material(material), offset(offset) {}
+        ~SphereColliderComponent() {}
+    };
+
+    struct CapsuleColliderComponent {
+        float radius, halfHeight;
+        ColliderMaterial material;
+        glm::vec3 offset;
+
+        CapsuleColliderComponent(Entity* entity, float radius = 0.5f, float halfHeight = 0.5f, const glm::vec3& offset = glm::vec3(0.0f), ColliderMaterial material = {}) : radius(radius), halfHeight(halfHeight), material(material), offset(offset) {}
+        ~CapsuleColliderComponent() {}
+    };
+
+    struct MeshColliderComponent {
+        CollisionComplexity complexity;
+        ColliderMaterial material;
+
+        MeshColliderComponent(Entity* entity, CollisionComplexity complexity = CollisionComplexity::Simple, ColliderMaterial material = {}) : complexity(complexity), material(material) {};
+        ~MeshColliderComponent() {};
     };
 }
