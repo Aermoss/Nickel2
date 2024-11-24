@@ -1,6 +1,7 @@
 #version 460
 
-out vec4 fragColor;
+layout (location = 0) out vec4 fragColor;
+layout (location = 1) out vec4 brightColor;
 
 uniform mat3 inverseModel;
 uniform mat4 model;

@@ -52,8 +52,7 @@ vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness) {
 
 void main() {		
     vec3 N = normalize(fragPosition);
-    vec3 R = N;
-    vec3 V = R;
+    vec3 V = N;
 
     const uint SAMPLE_COUNT = 1024u;
     vec3 prefilteredColor = vec3(0.0f);
@@ -69,16 +68,16 @@ void main() {
             float D = distributionGGX(N, H, roughness);
             float NdotH = max(dot(N, H), 0.0f);
             float HdotV = max(dot(H, V), 0.0f);
-            float pdf = D * NdotH / (4.0f * HdotV) + 0.0001f; 
+            float pdf = D * NdotH / (4.0f * HdotV) + 0.0001f;
             float resolution = 512.0f;
-            float saTexel  = 4.0f * PI / (6.0f * resolution * resolution);
+            float saTexel = 4.0f * PI / (6.0f * resolution * resolution);
             float saSample = 1.0f / (float(SAMPLE_COUNT) * pdf + 0.0001f);
-            float mipLevel = roughness == 0.0f ? 0.0f : 0.5f * log2(saSample / saTexel); 
-            prefilteredColor += textureLod(environmentMap, L, mipLevel).rgb * NdotL;
+            float mipLevel = roughness == 0.0f ? 0.0f : 0.5f * log2(saSample / saTexel);
+            vec3 texColor = textureLod(environmentMap, L, mipLevel).rgb;
+            prefilteredColor += texColor * NdotL;
             totalWeight += NdotL;
         }
     }
-
-    prefilteredColor = prefilteredColor / totalWeight;
-    fragColor = vec4(prefilteredColor, 1.0f);
+    
+    fragColor = vec4(prefilteredColor / totalWeight, 1.0f);
 }

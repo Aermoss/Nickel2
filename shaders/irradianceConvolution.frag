@@ -19,13 +19,16 @@ void main() {
 
     for (float phi = 0.0f; phi < 2.0f * PI; phi += sampleDelta) {
         for (float theta = 0.0f; theta < 0.5f * PI; theta += sampleDelta) {
-            vec3 tangentSample = vec3(sin(theta) * cos(phi),  sin(theta) * sin(phi), cos(theta));
-            vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * N; 
-            irradiance += texture(environmentMap, sampleVec).rgb * cos(theta) * sin(theta);
+            vec3 tangentSample = vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
+            vec3 sampleVec = normalize(tangentSample.x * right + tangentSample.y * up + tangentSample.z * N);
+            vec3 texColor = texture(environmentMap, sampleVec).rgb;
+            irradiance += texColor * cos(theta) * sin(theta);
             nrSamples++;
         }
     }
 
-    irradiance = PI * irradiance * (1.0f / float(nrSamples));
+    if (nrSamples != 0.0f)
+        irradiance = PI * irradiance * (1.0f / float(nrSamples));
+
     fragColor = vec4(irradiance, 1.0f);
 }
