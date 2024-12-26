@@ -93,11 +93,11 @@ namespace Nickel2 {
             std::shared_ptr<BloomRenderer> bloomRenderer;
             std::vector<glm::vec3> ssaoKernel;
 
-            std::shared_ptr<Framebuffer> depthMapDirectionalFramebuffer;
+            std::shared_ptr<Framebuffer> gBuffer, ssaoFramebuffer, ssaoBlurFramebuffer, captureFramebuffer, \
+                postProcessingFramebuffer, depthMapPointFramebuffer, depthMapDirectionalFramebuffer;
 
-            uint32_t gPosition, gAlbedo, gNormal, gBuffer, envCubeMap, brdfLUT, captureFramebuffer, captureRenderbuffer, depthRenderbuffer, \
-                irradianceMap, prefilterMap, depthMapPointFramebuffer, depthMapPoint, depthMapDirectional, ssaoFramebuffer, ssaoBlurFramebuffer, \
-                ssaoColorBuffer, ssaoColorBufferBlur, noiseTexture, postProcessingFramebuffer, postProcessingRenderbuffer, postProcessingColorBuffers[2];
+            uint32_t envCubeMap, brdfLUT, irradianceMap, prefilterMap, depthMapPoint, \
+                noiseTexture, captureRenderbuffer, depthRenderbuffer, postProcessingRenderbuffer;
 
             float bloomFilterRadius = 0.005f, \
                 logoTransparency = 1.0f, backgroundTransparency = 1.0f;
@@ -132,9 +132,10 @@ namespace Nickel2 {
             void LoadSkybox(const std::string& filePath);
             uint32_t GetSkyboxTexture() { return envCubeMap; }
 
-            void UpdatePointLights(std::vector<Light>& lights);
-            void UpdateShadowMaps(std::vector<Light>& lights);
-            void UpdateShadowMaps(Scene* scene, bool updateQueue = true);
+            void UpdatePointLights(std::vector<PointLightComponent*> lights);
+            
+            void UpdatePointShadowMap(glm::vec3 position);
+            void UpdateDirectionalShadowMap(Scene* scene);
             
             SceneRenderer(Window* window, const std::string& skyboxPath = "");
             ~SceneRenderer();
