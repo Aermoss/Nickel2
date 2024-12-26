@@ -165,12 +165,17 @@ namespace Nickel2 {
     }
 
     BloomFramebuffer::BloomFramebuffer(uint32_t windowWidth, uint32_t windowHeight, uint32_t mipChainSize) {
-        glm::vec2 mipSize(windowWidth, windowHeight);
+        glm::vec2 mipSize(windowWidth, windowHeight); {
+            framebuffer = Framebuffer::Create({
+                .width = static_cast<uint32_t>(mipSize.x), .height = static_cast<uint32_t>(mipSize.y), .samples = 1,
+                .attachments = { FramebufferTextureFormat::RGBA16F }
+            });
 
-        glGenFramebuffers(1, &framebuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+            BloomMip mip = { mipSize, framebuffer->GetColorAttachment() };
+            mipChain.emplace_back(mip);
+        }
 
-        for (uint32_t i = 0; i < mipChainSize; i++) {
+        for (uint32_t i = 1; i < mipChainSize; i++) {
             mipSize *= 0.5f;
             BloomMip mip = { mipSize, 0 };
             glGenTextures(1, &mip.texture);
@@ -182,31 +187,21 @@ namespace Nickel2 {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             mipChain.emplace_back(mip);
         }
-
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mipChain[0].texture, 0);
-
-        uint32_t attachments[1] = { GL_COLOR_ATTACHMENT0 };
-        glDrawBuffers(1, attachments);
-
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            Logger::Log(Logger::Level::Error, "Failed to create bloom framebuffer.");
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     BloomFramebuffer::~BloomFramebuffer() {
-        for (uint32_t i = 0; i < (uint32_t) mipChain.size(); i++)
+        for (uint64_t i = 1; i < mipChain.size(); i++)
             glDeleteTextures(1, &mipChain[i].texture);
 
-        glDeleteFramebuffers(1, &framebuffer);
+        framebuffer = nullptr;
     }
 
     void BloomFramebuffer::Bind() const {
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        framebuffer->Bind();
     }
 
     void BloomFramebuffer::Unbind() const {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        framebuffer->Unbind();
     }
 
     BloomRenderer::BloomRenderer(uint32_t windowWidth, uint32_t windowHeight, uint32_t mipChainSize) : mipChainSize(mipChainSize) {
@@ -235,7 +230,7 @@ namespace Nickel2 {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, sourceTexture);
 
-        for (uint32_t i = 0; i < static_cast<uint32_t>(mipChain.size()); i++) {
+        for (uint64_t i = 0; i < mipChain.size(); i++) {
             const BloomMip& mip = mipChain[i];
             RenderCommand::SetViewport(0, 0, mip.size.x, mip.size.y);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mip.texture, 0);
@@ -329,28 +324,16 @@ namespace Nickel2 {
         glReadBuffer(GL_NONE);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        glGenFramebuffers(1, &depthMapDirectionalFramebuffer);
-        glGenTextures(1, &depthMapDirectional);
-        glBindTexture(GL_TEXTURE_2D, depthMapDirectional);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depthMapSize.x, depthMapSize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-        float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-        glBindFramebuffer(GL_FRAMEBUFFER, depthMapDirectionalFramebuffer);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMapDirectional, 0);
-        glDrawBuffer(GL_NONE);
-        glReadBuffer(GL_NONE);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        depthMapDirectionalFramebuffer = Framebuffer::Create({
+            .width = static_cast<uint32_t>(depthMapSize.x), .height = static_cast<uint32_t>(depthMapSize.x), .samples = 1,
+            .attachments = { FramebufferTextureFormat::DEPTH24STENCIL8 }
+        });
     }
 
     void SceneRenderer::TerminateShadowMaps() {
-        glDeleteFramebuffers(1, &depthMapDirectionalFramebuffer);
         glDeleteFramebuffers(1, &depthMapPointFramebuffer);
-        glDeleteTextures(1, &depthMapDirectional);
         glDeleteTextures(1, &depthMapPoint);
+        depthMapDirectionalFramebuffer = nullptr;
         depthCubeMapShader = nullptr, shaderLibrary.Free("depthCubeMap");
         depthMapShader = nullptr, shaderLibrary.Free("depthMap");
     }
@@ -814,18 +797,18 @@ namespace Nickel2 {
             depthMapShader->Unbind();
 
             RenderCommand::SetViewport(0, 0, depthMapSize.x, depthMapSize.y);
-            glBindFramebuffer(GL_FRAMEBUFFER, depthMapDirectionalFramebuffer);
+            depthMapDirectionalFramebuffer->Bind();
             RenderCommand::Clear();
             
             for (uint32_t i = 0; i < queue.size(); i++)
                 queue[i]->Render(depthMapShader, false, true);
 
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            depthMapDirectionalFramebuffer->Unbind();
             glm::vec2 size = window->GetSize();
             RenderCommand::SetViewport(0, 0, size.x, size.y);
 
             glActiveTexture(GL_TEXTURE7);
-            glBindTexture(GL_TEXTURE_2D, depthMapDirectional);
+            glBindTexture(GL_TEXTURE_2D, depthMapDirectionalFramebuffer->GetDepthAttachment());
         }
 
         UpdateShadowMaps(scene->GetLights());
@@ -1005,7 +988,7 @@ namespace Nickel2 {
         glActiveTexture(GL_TEXTURE6);
         glBindTexture(GL_TEXTURE_CUBE_MAP, depthMapPoint);
         glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, depthMapDirectional);
+        glBindTexture(GL_TEXTURE_2D, depthMapDirectionalFramebuffer->GetDepthAttachment());
         glActiveTexture(GL_TEXTURE11);
         glBindTexture(GL_TEXTURE_2D, gPosition);
         glActiveTexture(GL_TEXTURE12);
@@ -1038,9 +1021,7 @@ namespace Nickel2 {
             if (i != 0) {
                 frameBuffer = Framebuffer::Create({
                     .width = static_cast<uint32_t>(size.x), .height = static_cast<uint32_t>(size.y),
-                    .samples = 1, .attachments = {
-                        { FramebufferTextureFormat::RGBA8 }
-                    }
+                    .samples = 1, .attachments = { FramebufferTextureFormat::RGBA }
                 }); frameBuffer->Bind();
             }
 
@@ -1083,7 +1064,7 @@ namespace Nickel2 {
         }
 
         if (ImGui::TreeNode("Shadows")) {
-            ImGui::Image((void*) (intptr_t) depthMapDirectional, { 256.0f, 256.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
+            ImGui::Image((void*) (intptr_t) depthMapDirectionalFramebuffer->GetDepthAttachment(), { 256.0f, 256.0f }, { 0.0f, 1.0f }, { 1.0f, 0.0f });
             ImGui::TreePop();
         }
 

@@ -35,6 +35,7 @@
 
 namespace Nickel2 {
     class Texture;
+    class Framebuffer;
     class Scene;
     
     void RenderSphere();
@@ -48,7 +49,7 @@ namespace Nickel2 {
 
     class BloomFramebuffer {
         private:
-            uint32_t framebuffer;
+            std::shared_ptr<Framebuffer> framebuffer;
             std::vector<BloomMip> mipChain;
 
         public:
@@ -93,10 +94,11 @@ namespace Nickel2 {
             std::shared_ptr<BloomRenderer> bloomRenderer;
             std::vector<glm::vec3> ssaoKernel;
 
+            std::shared_ptr<Framebuffer> depthMapDirectionalFramebuffer;
+
             uint32_t gPosition, gAlbedo, gNormal, gBuffer, envCubeMap, brdfLUT, captureFramebuffer, captureRenderbuffer, depthRenderbuffer, \
-                irradianceMap, prefilterMap, depthMapPointFramebuffer, depthMapPoint, depthMapDirectionalFramebuffer, depthMapDirectional, \
-                    ssaoFramebuffer, ssaoBlurFramebuffer, ssaoColorBuffer, ssaoColorBufferBlur, noiseTexture, postProcessingFramebuffer, \
-                        postProcessingRenderbuffer, postProcessingColorBuffers[2];
+                irradianceMap, prefilterMap, depthMapPointFramebuffer, depthMapPoint, depthMapDirectional, ssaoFramebuffer, ssaoBlurFramebuffer, \
+                ssaoColorBuffer, ssaoColorBufferBlur, noiseTexture, postProcessingFramebuffer, postProcessingRenderbuffer, postProcessingColorBuffers[2];
 
             float bloomFilterRadius = 0.005f, \
                 logoTransparency = 1.0f, backgroundTransparency = 1.0f;
