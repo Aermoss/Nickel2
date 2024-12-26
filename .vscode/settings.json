@@ -1,0 +1,4 @@
+{
+    "debug.openDebug": "openOnSessionStart",
+    "debug.terminal.clearBeforeReusing": true
+}
