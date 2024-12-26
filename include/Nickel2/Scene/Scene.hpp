@@ -34,20 +34,20 @@ namespace Nickel2 {
             Scene();
             ~Scene();
 
-            template<typename... Components> std::vector<Entity*> GetAllEntitiesWith() {
-                std::vector<Entity*> entities;
+            template<typename Component> std::vector<Component*> GetInstancesOf() {
+                std::vector<Component*> components = {};
+
+                for (auto& entity : registry.view<Component>()) {
+                    components.push_back(&registry.get<Component>(entity));
+                } return components;
+            }
+
+            template<typename... Components> std::vector<Entity*> GetEntitiesWith() {
+                std::vector<Entity*> entities = {};
 
                 for (auto& entity : registry.view<Components...>()) {
                     entities.push_back(GetEntityByHandle(entity));
                 } return entities;
-            }
-
-            template<typename... Components> uint64_t GetEntityCountWith() {
-                uint64_t count;
-
-                for (auto& entity : registry.view<Components...>()) {
-                    if (GetEntityByHandle(entity)->Destroyed()) count++;
-                } return count;
             }
 
             bool Paused() { return this->paused; }
