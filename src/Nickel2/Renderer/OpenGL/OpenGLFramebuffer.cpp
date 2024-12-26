@@ -19,13 +19,56 @@ namespace Nickel2 {
             glBindTexture(TextureTarget(multisampled), id);
         }
 
-        static void AttachColorTexture(uint32_t id, int samples, GLenum internalFormat, GLenum format, uint32_t width, uint32_t height, int index) {
+        static bool IsDepthFormat(FramebufferTextureFormat format) {
+            switch (format) {
+                case FramebufferTextureFormat::DEPTH24STENCIL8: return true;
+                case FramebufferTextureFormat::DEPTH32FSTENCIL8UINT: return true;
+                default: return false;
+            }
+        }
+
+        static GLenum ToOpenGLTextureFormat(FramebufferTextureFormat format) {
+            switch (format) {
+                case FramebufferTextureFormat::RGB: return GL_RGB;
+                case FramebufferTextureFormat::SRGB: return GL_RGB;
+                case FramebufferTextureFormat::RGBA: return GL_RGBA;
+                case FramebufferTextureFormat::RGBA16F: return GL_RGBA;
+                case FramebufferTextureFormat::RGBA32F: return GL_RGBA;
+                default: return 0;
+            }
+        }
+
+        static GLenum ToOpenGLInternalTextureFormat(FramebufferTextureFormat format) {
+            switch (format) {
+                case FramebufferTextureFormat::RGB: return GL_RGB8;
+                case FramebufferTextureFormat::SRGB: return GL_SRGB8;
+                case FramebufferTextureFormat::RGBA: return GL_RGBA8;
+                case FramebufferTextureFormat::RGBA16F: return GL_RGBA16F;
+                case FramebufferTextureFormat::RGBA32F: return GL_RGBA32F;
+                case FramebufferTextureFormat::DEPTH24STENCIL8: return GL_DEPTH24_STENCIL8;
+                case FramebufferTextureFormat::DEPTH32FSTENCIL8UINT: return GL_DEPTH_COMPONENT32F;
+                default: return 0;
+            }
+        }
+
+        static GLenum ToOpenGLDataType(FramebufferTextureFormat format) {
+            switch (format) {
+                case FramebufferTextureFormat::RGB: return GL_UNSIGNED_BYTE;
+                case FramebufferTextureFormat::SRGB: return GL_UNSIGNED_BYTE;
+                case FramebufferTextureFormat::RGBA: return GL_UNSIGNED_BYTE;
+                case FramebufferTextureFormat::RGBA16F: return GL_FLOAT;
+                case FramebufferTextureFormat::RGBA32F: return GL_FLOAT;
+                default: return 0;
+            }
+        }
+
+        static void AttachColorTexture(uint32_t id, int samples, FramebufferTextureFormat format, uint32_t width, uint32_t height, int index) {
             bool multisampled = samples > 1;
 
             if (multisampled) {
-                glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, internalFormat, width, height, GL_FALSE);
+                glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, Utils::ToOpenGLInternalTextureFormat(format), width, height, GL_FALSE);
             } else {
-                glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
+                glTexImage2D(GL_TEXTURE_2D, 0, Utils::ToOpenGLInternalTextureFormat(format), width, height, 0, Utils::ToOpenGLTextureFormat(format), GL_UNSIGNED_BYTE, nullptr);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -34,97 +77,49 @@ namespace Nickel2 {
             } glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, TextureTarget(multisampled), id, 0);
         }
 
-        static void AttachDepthTexture(uint32_t id, int samples, GLenum format, GLenum attachmentType, uint32_t width, uint32_t height) {
+        static void AttachDepthTexture(uint32_t id, int samples, FramebufferTextureFormat format, uint32_t width, uint32_t height) {
             bool multisampled = samples > 1;
 
             if (multisampled) {
-                glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, format, width, height, GL_FALSE);
+                glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, Utils::ToOpenGLInternalTextureFormat(format), width, height, GL_FALSE);
             } else {
-                glTexStorage2D(GL_TEXTURE_2D, 1, format, width, height);
+                glTexStorage2D(GL_TEXTURE_2D, 1, Utils::ToOpenGLInternalTextureFormat(format), width, height);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            } glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(multisampled), id, 0);
-        }
-
-        static bool IsDepthFormat(FramebufferTextureFormat format) {
-            switch (format) {
-                case FramebufferTextureFormat::DEPTH24STENCIL8: return true;
-                default: return false;
-            }
-        }
-
-        static GLenum GetFramebufferTextureFormat(FramebufferTextureFormat format) {
-            switch (format) {
-                case FramebufferTextureFormat::RGBA8: return GL_RGBA8;
-                case FramebufferTextureFormat::RED_INTEGER: return GL_RED_INTEGER;
-                default: return 0;
-            }
+            } glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, TextureTarget(multisampled), id, 0);
         }
     }
 
-    OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec) : specification(spec) {
-        for (auto spec : specification.attachments.attachments) {
-            if (!Utils::IsDepthFormat(spec.textureFormat)) { colorAttachmentSpecifications.emplace_back(spec); }
-            else { depthAttachmentSpecification = spec; }
-        } Invalidate();
-    }
-
-    OpenGLFramebuffer::~OpenGLFramebuffer() {
-        glDeleteFramebuffers(1, &id);
-        glDeleteTextures(colorAttachments.size(), colorAttachments.data());
-        glDeleteTextures(1, &depthAttachment);
-    }
+    OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& specification) : specification(specification) { Invalidate(); }
+    OpenGLFramebuffer::~OpenGLFramebuffer() { Release(); }
 
     void OpenGLFramebuffer::Invalidate() {
-        if (id != 0) {
-            glDeleteFramebuffers(1, &id);
-            glDeleteTextures(colorAttachments.size(), colorAttachments.data());
-            glDeleteTextures(1, &depthAttachment);
-            
-            colorAttachments.clear();
-            depthAttachment = 0;
-        }
-
+        if (id != 0) Release();
         glCreateFramebuffers(1, &id);
         glBindFramebuffer(GL_FRAMEBUFFER, id);
-
         bool multisample = specification.samples > 1;
 
-        if (colorAttachmentSpecifications.size()) {
-            colorAttachments.resize(colorAttachmentSpecifications.size());
+        for (FramebufferTextureFormat format : specification.attachments) {
+            if (!Utils::IsDepthFormat(format)) {
+                colorAttachmentFormats.push_back(format);
+            } else {
+                NK_CORE_ASSERT(depthAttachment == 0, "Framebuffer already has a depth attachment.");
+                Utils::CreateTextures(multisample, &depthAttachment, 1);
+                Utils::BindTexture(multisample, depthAttachment);
+                Utils::AttachDepthTexture(depthAttachment, specification.samples, format, specification.width, specification.height);
+            }
+        }
+
+        if (colorAttachmentFormats.size()) {
+            colorAttachments.resize(colorAttachmentFormats.size());
             Utils::CreateTextures(multisample, colorAttachments.data(), colorAttachments.size());
 
             for (size_t i = 0; i < colorAttachments.size(); i++) {
                 Utils::BindTexture(multisample, colorAttachments[i]);
-
-                switch (colorAttachmentSpecifications[i].textureFormat) {
-                    case FramebufferTextureFormat::RGBA8: {
-                        Utils::AttachColorTexture(colorAttachments[i], specification.samples, GL_RGBA8, GL_RGBA, specification.width, specification.height, i);
-                        break;
-                    } case FramebufferTextureFormat::RED_INTEGER: {
-                        Utils::AttachColorTexture(colorAttachments[i], specification.samples, GL_R32I, GL_RED_INTEGER, specification.width, specification.height, i);
-                        break;
-                    } default: {
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (depthAttachmentSpecification.textureFormat != FramebufferTextureFormat::None) {
-            Utils::CreateTextures(multisample, &depthAttachment, 1);
-            Utils::BindTexture(multisample, depthAttachment);
-
-            switch (depthAttachmentSpecification.textureFormat) {
-                case FramebufferTextureFormat::DEPTH24STENCIL8: {
-                    Utils::AttachDepthTexture(depthAttachment, specification.samples, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL_ATTACHMENT, specification.width, specification.height);
-                    break;
-                } default: {
-                    break;
-                }
+                Utils::AttachColorTexture(colorAttachments[i], specification.samples, colorAttachmentFormats[i], specification.width, specification.height, i);
             }
         }
 
@@ -138,6 +133,13 @@ namespace Nickel2 {
 
         NK_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete.");
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    void OpenGLFramebuffer::Release() {
+        glDeleteFramebuffers(1, &id);
+        glDeleteTextures(1, &depthAttachment);
+        glDeleteTextures(colorAttachments.size(), colorAttachments.data());
+        colorAttachments.clear(), colorAttachmentFormats.clear(), depthAttachment = 0;
     }
 
     void OpenGLFramebuffer::Bind() {
@@ -157,8 +159,7 @@ namespace Nickel2 {
 
     void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value) {
         NK_CORE_ASSERT(attachmentIndex < colorAttachments.size());
-        FramebufferTextureSpecification& spec = colorAttachmentSpecifications[attachmentIndex];
-        glClearTexImage(colorAttachments[attachmentIndex], 0, Utils::GetFramebufferTextureFormat(spec.textureFormat), GL_INT, &value);
+        glClearTexImage(colorAttachments[attachmentIndex], 0, Utils::ToOpenGLInternalTextureFormat(colorAttachmentFormats[attachmentIndex]), GL_INT, &value);
     }
 
     std::vector<uint8_t> OpenGLFramebuffer::GetPixels(std::vector<uint8_t>& buffer, uint32_t attachmentIndex, uint32_t channels) {

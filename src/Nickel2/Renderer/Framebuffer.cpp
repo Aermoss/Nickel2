@@ -10,10 +10,9 @@ namespace Nickel2 {
         return stride + ((stride % 4) ? (4 - stride % 4) : 0);
     }
 
-    std::shared_ptr<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec) {
+    std::shared_ptr<Framebuffer> Framebuffer::Create(const FramebufferSpecification& specification) {
         switch (RendererAPI::GetAPI()) {
-            case RendererAPIType::None: return nullptr;
-            case RendererAPIType::OpenGL: return std::make_shared<OpenGLFramebuffer>(spec);
+            case RendererAPIType::OpenGL: return std::make_shared<OpenGLFramebuffer>(specification);
             default: return nullptr;
         }
     }
