@@ -29,35 +29,66 @@ namespace Nickel2 {
 
         static GLenum ToOpenGLTextureFormat(FramebufferTextureFormat format) {
             switch (format) {
+                case FramebufferTextureFormat::RED8UN: return GL_RED;
+                case FramebufferTextureFormat::RED8UI: return GL_RED_INTEGER;
+                case FramebufferTextureFormat::RED16UI: return GL_RED_INTEGER;
+                case FramebufferTextureFormat::RED32UI: return GL_RED_INTEGER;
+                case FramebufferTextureFormat::RED32F: return GL_RED;
+                case FramebufferTextureFormat::RG8: return GL_RG;
+                case FramebufferTextureFormat::RG16F: return GL_RG;
+                case FramebufferTextureFormat::RG32F: return GL_RG;
                 case FramebufferTextureFormat::RGB: return GL_RGB;
                 case FramebufferTextureFormat::SRGB: return GL_RGB;
                 case FramebufferTextureFormat::RGBA: return GL_RGBA;
+                case FramebufferTextureFormat::SRGBA: return GL_RGBA;
                 case FramebufferTextureFormat::RGBA16F: return GL_RGBA;
                 case FramebufferTextureFormat::RGBA32F: return GL_RGBA;
+                case FramebufferTextureFormat::B10R11G11UF: return GL_RGB;
                 default: return 0;
             }
         }
 
         static GLenum ToOpenGLInternalTextureFormat(FramebufferTextureFormat format) {
             switch (format) {
+                case FramebufferTextureFormat::RED8UN: return GL_R8;
+                case FramebufferTextureFormat::RED8UI: return GL_R8UI;
+                case FramebufferTextureFormat::RED16UI: return GL_R16UI;
+                case FramebufferTextureFormat::RED32UI: return GL_R32UI;
+                case FramebufferTextureFormat::RED32F: return GL_R32F;
+                case FramebufferTextureFormat::RG8: return GL_RG8;
+                case FramebufferTextureFormat::RG16F: return GL_RG16F;
+                case FramebufferTextureFormat::RG32F: return GL_RG32F;
                 case FramebufferTextureFormat::RGB: return GL_RGB8;
                 case FramebufferTextureFormat::SRGB: return GL_SRGB8;
                 case FramebufferTextureFormat::RGBA: return GL_RGBA8;
+                case FramebufferTextureFormat::SRGBA: return GL_SRGB8_ALPHA8;
                 case FramebufferTextureFormat::RGBA16F: return GL_RGBA16F;
                 case FramebufferTextureFormat::RGBA32F: return GL_RGBA32F;
+                case FramebufferTextureFormat::B10R11G11UF: return GL_R11F_G11F_B10F;
                 case FramebufferTextureFormat::DEPTH24STENCIL8: return GL_DEPTH24_STENCIL8;
-                case FramebufferTextureFormat::DEPTH32FSTENCIL8UINT: return GL_DEPTH_COMPONENT32F;
+                case FramebufferTextureFormat::DEPTH32FSTENCIL8UINT: return GL_DEPTH32F_STENCIL8;
+                case FramebufferTextureFormat::DEPTH32F: return GL_DEPTH_COMPONENT32F;
                 default: return 0;
             }
         }
 
         static GLenum ToOpenGLDataType(FramebufferTextureFormat format) {
             switch (format) {
+                case FramebufferTextureFormat::RED8UN: return GL_UNSIGNED_BYTE;
+                case FramebufferTextureFormat::RED8UI: return GL_UNSIGNED_BYTE;
+                case FramebufferTextureFormat::RED16UI: return GL_UNSIGNED_BYTE;
+                case FramebufferTextureFormat::RED32UI: return GL_UNSIGNED_BYTE;
+                case FramebufferTextureFormat::RED32F: return GL_FLOAT;
+                case FramebufferTextureFormat::RG8: return GL_UNSIGNED_BYTE;
+                case FramebufferTextureFormat::RG16F: return GL_FLOAT;
+                case FramebufferTextureFormat::RG32F: return GL_FLOAT;
                 case FramebufferTextureFormat::RGB: return GL_UNSIGNED_BYTE;
                 case FramebufferTextureFormat::SRGB: return GL_UNSIGNED_BYTE;
                 case FramebufferTextureFormat::RGBA: return GL_UNSIGNED_BYTE;
+                case FramebufferTextureFormat::SRGBA: return GL_UNSIGNED_BYTE;
                 case FramebufferTextureFormat::RGBA16F: return GL_FLOAT;
                 case FramebufferTextureFormat::RGBA32F: return GL_FLOAT;
+                case FramebufferTextureFormat::B10R11G11UF: return GL_FLOAT;
                 default: return 0;
             }
         }
@@ -68,7 +99,7 @@ namespace Nickel2 {
             if (multisampled) {
                 glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, Utils::ToOpenGLInternalTextureFormat(format), width, height, GL_FALSE);
             } else {
-                glTexImage2D(GL_TEXTURE_2D, 0, Utils::ToOpenGLInternalTextureFormat(format), width, height, 0, Utils::ToOpenGLTextureFormat(format), GL_UNSIGNED_BYTE, nullptr);
+                glTexImage2D(GL_TEXTURE_2D, 0, Utils::ToOpenGLInternalTextureFormat(format), width, height, 0, Utils::ToOpenGLTextureFormat(format), Utils::ToOpenGLDataType(format), nullptr);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
