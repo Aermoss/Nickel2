@@ -67,7 +67,7 @@ $(pch).gch: $(pch) $(foreach file,Platform Base Assert Utils Logger,$(patsubst %
 
 $(executable): $(pchObject) $(editorObjects) $(moduleObjects) $(audioObjects) $(physicsObjects) $(rendererObjects) $(vendorObjects)
 	@python ./checkDir.py --path="$(dir $@)"
-	$(cc) -std=$(std) $(warnings) $^ -o $@ $(addprefix -I,$(includeDir)) $(addprefix -L,$(libraryDir)) $(libraries) $(flags) $(defines)
+	$(cc) -std=$(std) -Wl,--allow-multiple-definition $(warnings) $^ -o $@ $(addprefix -I,$(includeDir)) $(addprefix -L,$(libraryDir)) $(libraries) $(flags) $(defines)
 
 $(objectDir)/$(projectName)/Editor/%.o: $(sourceDir)/$(projectName)/Editor/%.cpp $(wildcard $(sourceDir)/$(projectName)/Editor/*.hpp) $(pch).gch
 	@python ./checkDir.py --path="$(dir $@)"
