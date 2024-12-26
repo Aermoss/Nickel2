@@ -14,8 +14,8 @@ rendererDir := $(projectDir)/Renderer
 physicsDir := $(projectDir)/Physics
 audioDir := $(projectDir)/Audio
 vendorDir := $(sourceDir)/Vendor
-libraries := steam_api64 mono-2.0-sgen OpenAL32.dll alut.dll assimp.dll glfw3dll opengl32 Jolt.dll avcodec.dll avdevice.dll \
-	avfilter.dll avformat.dll avutil.dll postproc.dll swresample.dll swscale.dll gdi32 odbc32 odbccp32 dwmapi winmm
+libraries := avcodec.dll avdevice.dll avfilter.dll avformat.dll avutil.dll postproc.dll swresample.dll swscale.dll \
+	Jolt.dll OpenAL32.dll alut.dll assimp.dll glfw3dll opengl32 gdi32 odbc32 odbccp32 dwmapi winmm
 executable := $(binaryDir)/Editor.exe
 staticLibrary := $(wordlist 1,1,$(libraryDir))/lib$(projectName).a
 pch := ./include/$(projectName)/$(pchName).hpp
