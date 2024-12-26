@@ -30,7 +30,7 @@ defines := $(foreach def,$(defines),-D$(def))
 pchSource := $(projectDir)/$(pchName).cpp
 pchObject := $(patsubst $(sourceDir)/%.cpp,$(objectDir)/%.o,$(pchSource))
 
-editorModule := Debug
+editorModule := Editor
 editorSources := $(wildcard $(projectDir)/$(editorModule)/*.cpp)
 editorObjects := $(patsubst $(sourceDir)/%.cpp,$(objectDir)/%.o,$(editorSources))
 
