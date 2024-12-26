@@ -158,11 +158,9 @@ namespace Nickel2 {
             NK_CORE_ASSERT(colorAttachments.size() <= 4);
             GLenum buffers[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
             glDrawBuffers(colorAttachments.size(), buffers);
-        } else if (colorAttachments.empty()) {
-            glDrawBuffer(GL_NONE);
         }
 
-        NK_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "Framebuffer is incomplete.");
+        NK_CORE_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE || !specification.checkStatus, "Framebuffer is incomplete.");
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 

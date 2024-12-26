@@ -13,6 +13,7 @@ namespace Nickel2 {
     struct FramebufferSpecification {
         uint32_t width, height, samples = 1;
         std::vector<FramebufferTextureFormat> attachments;
+        bool checkStatus = true;
     };
 
     class Framebuffer {
