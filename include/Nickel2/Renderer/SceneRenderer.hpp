@@ -24,7 +24,6 @@
 #include "UniformBuffer.hpp"
 #include "Buffer.hpp"
 #include "Shader.hpp"
-#include "Light.hpp"
 #include "Mesh.hpp"
 
 #include "../Core/Input.hpp"

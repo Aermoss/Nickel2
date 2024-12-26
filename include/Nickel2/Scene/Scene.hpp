@@ -6,7 +6,6 @@
 #include <entt/entt.hpp>
 
 #include "../Core/Base.hpp"
-#include "../Renderer/Light.hpp"
 #include "../Renderer/Camera.hpp"
 
 #include "Component.hpp"
@@ -22,7 +21,6 @@ namespace Nickel2 {
         private:
             std::shared_ptr<PhysicsScene> physicsScene;
             std::unordered_map<uint64_t, Entity*> entities;
-            std::vector<Light> lights;
             entt::registry registry;
             bool paused = false;
 
@@ -87,10 +85,6 @@ namespace Nickel2 {
             std::shared_ptr<PhysicsScene> GetPhysicsScene() {
                 return physicsScene;
             }
-
-            std::vector<Light>& GetLights();
-            void PushLight(Light light);
-            void PopLight();
 
             friend class Entity;
     };

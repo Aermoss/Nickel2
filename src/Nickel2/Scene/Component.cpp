@@ -12,6 +12,9 @@ namespace Nickel2 {
     NameComponent::NameComponent(Entity* entity, const std::string& name) : name(name) {}
     NameComponent::~NameComponent() {}
 
+    PointLightComponent::PointLightComponent(Entity* entity) {}
+    PointLightComponent::~PointLightComponent() {}
+
     DirectionalLightComponent::DirectionalLightComponent(Entity* entity) {}
     DirectionalLightComponent::~DirectionalLightComponent() {}
 

@@ -22,8 +22,8 @@ namespace Nickel2 {
                 if (!entity->Destroyed()) entity->Destroy();
             }
         }
-        
-        lights.clear();
+
+        queue.clear();
         physicsScene = nullptr;
     }
 
@@ -129,17 +129,5 @@ namespace Nickel2 {
             CameraComponent& ref = registry.get<CameraComponent>(entity);
             if (ref.camera->primary) return GetEntityByID(registry.get<IDComponent>(entity).id);
         } return nullptr;
-    }
-
-    std::vector<Light>& Scene::GetLights() {
-        return lights;
-    }
-
-    void Scene::PushLight(Light light) {
-        lights.push_back(light);
-    }
-
-    void Scene::PopLight() {
-        lights.pop_back();
     }
 }

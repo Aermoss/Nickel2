@@ -49,9 +49,18 @@ namespace Nickel2 {
         ~NameComponent();
     };
 
+    struct PointLightComponent {
+        glm::vec3 position = { 0.0f, 0.0f, 0.0f }, color = { 1.0f, 1.0f, 1.0f };
+        float brightness = 1.0f;
+        
+        PointLightComponent(Entity* entity);
+        ~PointLightComponent();
+    };
+
     struct DirectionalLightComponent {
         glm::vec3 direction = { 0.0f, 0.0f, 0.0f };
         bool castShadows = true, followCamera = true;
+        
         float distance = 20.0f, size = 35.0f, \
             nearPlane = 0.1f, farPlane = 100.0f;
         

@@ -83,7 +83,6 @@
 #include "Renderer/Camera.hpp"
 #include "Renderer/FrameBuffer.hpp"
 #include "Renderer/ImGuiLayer.hpp"
-#include "Renderer/Light.hpp"
 #include "Renderer/Material.hpp"
 #include "Renderer/Mesh.hpp"
 #include "Renderer/RenderCommand.hpp"

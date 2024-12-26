@@ -709,13 +709,12 @@ namespace Nickel2 {
         RenderCommand::SetViewport(0, 0, size.x, size.y);
     }
 
-    void SceneRenderer::UpdatePointLights(std::vector<Light>& lights) {
+    void SceneRenderer::UpdatePointLights(std::vector<PointLightComponent*> lights) {
         std::vector<glm::vec4> colors;
         std::vector<glm::vec3> positions;
-        std::vector<float> brightnesses;
 
         for (uint32_t i = 0; i < lights.size(); i++)
-            positions.push_back(lights[i].position), colors.push_back(glm::vec4(lights[i].color, lights[i].brightness));
+            positions.push_back(lights[i]->position), colors.push_back(glm::vec4(lights[i]->color, lights[i]->brightness));
 
         defaultShader->Bind();
         defaultShader->SetInt("pointLightCount", lights.size());
@@ -724,18 +723,16 @@ namespace Nickel2 {
         defaultShader->Unbind();
     }
 
-    void SceneRenderer::UpdateShadowMaps(std::vector<Light>& lights) {
-        if (lights.size() == 0) return;
-        glm::vec3 position = lights[0].position;
-        glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), depthMapSize.x / depthMapSize.y, 0.1f, 1000.0f);
+    void SceneRenderer::UpdatePointShadowMap(glm::vec3 position) {
+        glm::mat4 proj = glm::perspective(glm::radians(90.0f), depthMapSize.x / depthMapSize.y, 0.1f, 1000.0f);
 
         std::vector<glm::mat4> shadowTransforms {
-            shadowProj * glm::lookAt(position, position + glm::vec3( 1.0,  0.0,  0.0), glm::vec3(0.0, -1.0,  0.0)),
-            shadowProj * glm::lookAt(position, position + glm::vec3(-1.0,  0.0,  0.0), glm::vec3(0.0, -1.0,  0.0)),
-            shadowProj * glm::lookAt(position, position + glm::vec3( 0.0,  1.0,  0.0), glm::vec3(0.0,  0.0,  1.0)),
-            shadowProj * glm::lookAt(position, position + glm::vec3( 0.0, -1.0,  0.0), glm::vec3(0.0,  0.0, -1.0)),
-            shadowProj * glm::lookAt(position, position + glm::vec3( 0.0,  0.0,  1.0), glm::vec3(0.0, -1.0,  0.0)),
-            shadowProj * glm::lookAt(position, position + glm::vec3( 0.0,  0.0, -1.0), glm::vec3(0.0, -1.0,  0.0))
+            proj * glm::lookAt(position, position + (glm::vec3) {  1.0f,  0.0f,  0.0f }, { 0.0f, -1.0f,  0.0f }),
+            proj * glm::lookAt(position, position + (glm::vec3) { -1.0f,  0.0f,  0.0f }, { 0.0f, -1.0f,  0.0f }),
+            proj * glm::lookAt(position, position + (glm::vec3) {  0.0f,  1.0f,  0.0f }, { 0.0f,  0.0f,  1.0f }),
+            proj * glm::lookAt(position, position + (glm::vec3) {  0.0f, -1.0f,  0.0f }, { 0.0f,  0.0f, -1.0f }),
+            proj * glm::lookAt(position, position + (glm::vec3) {  0.0f,  0.0f,  1.0f }, { 0.0f, -1.0f,  0.0f }),
+            proj * glm::lookAt(position, position + (glm::vec3) {  0.0f,  0.0f, -1.0f }, { 0.0f, -1.0f,  0.0f })
         };
 
         RenderCommand::SetViewport(0, 0, depthMapSize.x, depthMapSize.y);
@@ -758,23 +755,17 @@ namespace Nickel2 {
         RenderCommand::SetViewport(0, 0, size.x, size.y);
     }
 
-    void SceneRenderer::UpdateShadowMaps(Scene* scene, bool updateQueue) {
+    void SceneRenderer::UpdateDirectionalShadowMap(Scene* scene) {
         Entity* camera = scene->GetPrimaryCameraEntity();
-
-        if (updateQueue) {
-            for (Entity* entity : scene->GetAllEntitiesWith<MeshComponent>())
-                this->Submit(entity->GetComponent<MeshComponent>().mesh);
-        }
+        std::vector<Entity*> entities = scene->GetEntitiesWith<DirectionalLightComponent>();
+        NK_CORE_ASSERT(entities.size() <= 1, "Only one directional light is supported");
 
         defaultShader->Bind();
         defaultShader->SetInt("enableDirectionalLight", scene->GetEntityCountWith<DirectionalLightComponent>() > 0 ? 1 : 0);
+        defaultShader->SetInt("enableDirectionalLight", entities.size() > 0 ? 1 : 0);
         defaultShader->Unbind();
 
-        uint32_t count = 0;
-
-        for (Entity* entity : scene->GetAllEntitiesWith<DirectionalLightComponent>()) {
-            NK_CORE_ASSERT(++count == 1, "Maximum directional light count exceeded.");
-
+        for (Entity* entity : entities) {
             DirectionalLightComponent& directionalLight = entity->GetComponent<DirectionalLightComponent>();
             glm::vec3 directionalLightTranslation = entity->GetComponent<TransformComponent>().GetTranslation();
             glm::vec3 cameraTranslation = camera->GetComponent<TransformComponent>().GetTranslation();
@@ -810,9 +801,6 @@ namespace Nickel2 {
             glActiveTexture(GL_TEXTURE7);
             glBindTexture(GL_TEXTURE_2D, depthMapDirectionalFramebuffer->GetDepthAttachment());
         }
-
-        UpdateShadowMaps(scene->GetLights());
-        if (updateQueue) queue.clear();
     }
 
     SceneRenderer::SceneRenderer(Window* window, const std::string& skyboxPath) : window(window) {
@@ -877,7 +865,7 @@ namespace Nickel2 {
 
     void SceneRenderer::Render(Scene* scene, float deltaTime, float shadownUpdateInterval, bool updateCamera, bool renderBackground) {
         Camera* camera = scene->GetPrimaryCamera();
-        UpdatePointLights(scene->GetLights());
+        this->UpdatePointLights(scene->GetInstancesOf<PointLightComponent>());
 
         defaultShader->Bind();
         defaultShader->SetInt("enableIBL", enableSkybox ? 1 : 0);
@@ -909,13 +897,22 @@ namespace Nickel2 {
             bloomRenderer->Resize(size.x, size.y);
         }
 
-        for (Entity* entity : scene->GetAllEntitiesWith<MeshComponent>())
+        for (Entity* entity : scene->GetEntitiesWith<MeshComponent>())
             this->Submit(entity->GetComponent<MeshComponent>().mesh);
 
         static float shadowUpdateCooldown = 0.0f;
 
         if (shadowUpdateCooldown <= 0.0f) {
-            this->UpdateShadowMaps(scene, false);
+            this->UpdateDirectionalShadowMap(scene);
+            std::vector<Entity*> entities = scene->GetEntitiesWith<PointLightComponent>();
+
+            if (!entities.empty()) {
+                glm::vec3 translation, scale; glm::quat rotation;
+                glm::mat4 transform = entities[0]->GetComponent<TransformComponent>().GetWorldTransform();
+                Math::DecomposeTransform(transform, translation, rotation, scale);
+                this->UpdatePointShadowMap(translation);
+            }
+
             shadowUpdateCooldown = shadownUpdateInterval;
         } shadowUpdateCooldown -= deltaTime;
 
