@@ -7,15 +7,15 @@ sourceDir := ./src
 binaryDir := ./bin
 objectDir := $(binaryDir)/obj
 shaderDir := ./shaders
-includeDir := C:\msys64\mingw64\include ./include ./include/imgui ./include/imguizmo
-libraryDir := C:\msys64\mingw64\lib ./lib
+includeDir := C:\msys64\ucrt64\include ./include ./include/imgui ./include/imguizmo
+libraryDir := C:\msys64\ucrt64\lib ./lib
 projectDir := $(sourceDir)/$(projectName)
 rendererDir := $(projectDir)/Renderer
 physicsDir := $(projectDir)/Physics
 audioDir := $(projectDir)/Audio
 vendorDir := $(sourceDir)/Vendor
-libraries := avcodec.dll avdevice.dll avfilter.dll avformat.dll avutil.dll postproc.dll swresample.dll swscale.dll \
-	Jolt.dll OpenAL32.dll alut.dll assimp.dll glfw3dll opengl32 gdi32 odbc32 odbccp32 dwmapi winmm
+libraries := avcodec.dll avdevice.dll avfilter.dll avformat.dll avutil.dll swresample.dll swscale.dll \
+	Jolt.dll openal.dll alut.dll assimp.dll glfw3.dll opengl32 gdi32 odbc32 odbccp32 dwmapi winmm
 executable := $(binaryDir)/Editor.exe
 staticLibrary := $(wordlist 1,1,$(libraryDir))/lib$(projectName).a
 pch := ./include/$(projectName)/$(pchName).hpp
