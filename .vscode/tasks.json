@@ -4,7 +4,7 @@
         {
             "label": "Build Single Threaded",
             "type": "shell",
-            "command": "make",
+            "command": "mingw32-make",
             "args": [],
             "group": {
                 "kind": "build",
@@ -15,7 +15,7 @@
         {
             "label": "Build Multi Threaded",
             "type": "shell",
-            "command": "make",
+            "command": "mingw32-make",
             "args": ["-j"],
             "group": {
                 "kind": "build",
@@ -26,7 +26,7 @@
         {
             "label": "Clean",
             "type": "shell",
-            "command": "make",
+            "command": "mingw32-make",
             "args": ["-j", "clean"],
             "group": {
                 "kind": "build",
