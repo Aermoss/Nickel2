@@ -14,8 +14,7 @@ rendererDir := $(projectDir)/Renderer
 physicsDir := $(projectDir)/Physics
 audioDir := $(projectDir)/Audio
 vendorDir := $(sourceDir)/Vendor
-libraries := avcodec.dll avdevice.dll avfilter.dll avformat.dll avutil.dll swresample.dll swscale.dll \
-	Jolt.dll openal.dll alut.dll assimp.dll glfw3.dll opengl32 gdi32 odbc32 odbccp32 dwmapi winmm
+libraries := Jolt.dll openal.dll alut.dll assimp.dll glfw3.dll dwmapi
 executable := $(binaryDir)/Editor.exe
 staticLibrary := $(wordlist 1,1,$(libraryDir))/lib$(projectName).a
 pch := ./include/$(projectName)/$(pchName).hpp
