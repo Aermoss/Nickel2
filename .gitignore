@@ -6,5 +6,4 @@ lib/libNickel2.a
 bin/Editor.exe
 res/*.dds
 bin/obj
-*.sln
 *.exe
