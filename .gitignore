@@ -1,9 +1,6 @@
 screenshot.png
-shaders/ocean
-src/Nickel2/Debug
 include/Nickel2/*.gch
 lib/libNickel2.a
 bin/Editor.exe
-res/*.dds
 bin/obj
 *.exe
